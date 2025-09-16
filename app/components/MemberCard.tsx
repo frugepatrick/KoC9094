@@ -1,27 +1,32 @@
-import { join } from "path";
 import React from "react";
 
-//create the Member
-interface Member {
+export interface MemberCardProps {
+    id: string;
+    memberId: number;
     firstName: string;
-  lastName: string;
-  joinDate: string;
-  isActive: boolean;
-  position: string;
-  timeInPosition: string;
+    lastName: string;
+    email: string | null;
+    joinDate: string | null;
+    position: string | null;
+    address: string | null;
+    homePhone: string | null;
+    cellPhone: string | null;
+    suffix: string | null;
 }
-//constructthe function and send the parameters of Member 
-//(can easily just send member: Member , but this way makes calling
-// The individual attributes easier AKA: no Member.firstName)
 
 export default function MemberCard({
+    id,
+    memberId,
     firstName,
     lastName,
+    email,
     joinDate,
-    isActive,
     position,
-    timeInPosition,
-  }: Member) {
+    address,
+    homePhone,
+    cellPhone,
+    suffix,
+  }: MemberCardProps) {
     return (
       <div className="card mb-1 shadow-sm koc-card">
         <div className="card-body">
@@ -29,22 +34,33 @@ export default function MemberCard({
             <div className="col-md-2 fw-bold">
               {firstName} {lastName}
             </div>
-            <div className="col-md-2">
-              <small className="text-light">Joined:</small> {joinDate}
-            </div>
             <div className="col-md-3">
-              <strong>Position:</strong> {position}
+              <strong>Position:</strong> {position ?? "Member"}
             </div>
             <div className="col-md-3 text-start">
-              <strong>Time:</strong> {timeInPosition}
+              <strong>MemberId:</strong> {memberId ?? "-"}
             </div>
-            <div className="col-md-2">
-              <strong>Status:</strong>{" "}
-              <span className={isActive ? "text-success" : "text-danger"}>
-                {isActive ? "Active" : "Inactive"}
-              </span>
+            <div className="col-md-3 text-start">
+              <strong>Email:</strong> {email ?? "-"}
             </div>
           </div>
+           {/* Collapsible details */}
+          <details className="mt-2">
+            <summary className="cursor-pointer text-end">More details</summary>
+            <div className="mt-2 p-2" style={{ backgroundColor: "#f8f9fa", borderRadius: "0.25rem", color: 'black'}}>
+              <div className="row align-items-center">
+              <div className="col-md-4">
+                <strong>Join Date:</strong> {joinDate ?? "-"}
+              </div>
+              <div className="col-md-4 text-start">
+                <strong>Home Phone:</strong> {homePhone ?? "-"}
+              </div>
+              <div className="col-md-4 text-start">
+                <strong>Cell Phone:</strong> {cellPhone ?? "-"}
+              </div>
+            </div>
+            </div>            
+          </details>
         </div>
       </div>
     );

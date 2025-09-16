@@ -1,145 +1,190 @@
+'use client';
+
 import React, { useState, useEffect } from "react";
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import TextAlign from '@tiptap/extension-text-align';
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import TextAlign from "@tiptap/extension-text-align";
+import { useSession } from "next-auth/react";
 
 export default function MeetingNotes() {
-  const [editorLoaded, setEditorLoaded] = useState(false);
-  const [date, setDate] = useState(() =>
-    new Date().toISOString().split('T')[0]
-  );
+  const { data: session } = useSession();
+  const role = session?.user?.role;
+  const canEdit = role === "admin" || role === "officer";
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Underline,
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-      }),
-    ],
-    content: `
-    <h3><u>Call to Order By:</u></h3><p><br/></p>
-    <h3><u>Role Call:</u></h3>
-    <li>Grand Knight: </li> 
-    <li>Chaplain: </li>
-    <li>Recorder: </li>
-    <h3><u>Opening Prayer By:</u></h3><p><br/></p>
-    <h3><u>Approve Minutes of Prior Meeting:</u></h3><p><br/></p>
-    <h3><u>Chaplain's Message:</u></h3><p><br/></p>
-    <h3><u>Grand Knight's Report:</u></h3><p><br/></p>
-    <h3><u>Financial Report:</u></h3><p><br/></p>
-    <h3><u>Membership Report:</u></h3><p><br/></p>
-    <h3><u>Faith:</u></h3><p><br/></p>
-    <h3><u>Family:</u></h3><p><br/></p>
-    <h3><u>Community:</u></h3><p><br/></p>
-    <h3><u>Fourth Degree Report:</u></h3><p><br/></p>
-    <h3><u>Field Agent Report:</u></h3><p><br/></p>
-    <h3><u>District Deputy Report:</u></h3><p><br/></p>
-    <h3><u>Unfinished Business:</u></h3><p><br/></p>
-    <h3><u>New Business</u></h3><p><br/></p>
-    <h3><u>Good of the Order:</u></h3>    
-    <h2><li>Family of the Quarter </li></h2><p>-</p>
-    <h2><li>Knight Of The Quarter </li></h2><p>-</p>
-    <h2><li>Prayers for the Following: </li></h2><p>-</p>
-    <h3><u>Lectures Reflection:</u></h3><p><br/></p>
-    <h3><u>Grand Knight's Summary:</u></h3><p><br/></p>    
-    <h3><u>Closing Prayer</u></h3><p><br/></p>
-    <h3><u>Closing Meeting At:</u></h3><p><br/></p>
-    <h3><u>Next Meeting:</u></h3><p><br/></p>
-    <h3><u>Recorder:</u></h3><p><br/></p>
-    <h3><u>Motions</u></h3><p><br/></p>
-    <h3><u>Extra Notes</u></h3><p><br/></p>
-    `,
-  }, [editorLoaded]); // Editor will reinit after client-only mount
+  const [editorLoaded, setEditorLoaded] = useState(false);
+  const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
+
+  const editor = useEditor(
+    {
+      editable: canEdit,
+      extensions: [
+        StarterKit,
+        Underline,
+        TextAlign.configure({ types: ["heading", "paragraph"] }),
+      ],
+      content: `
+        <h3><u>Call to Order By:</u></h3><p></p>
+        <h3><u>Opening Prayer By:</u></h3><p></p>
+
+        <h3><u>Role Call:</u></h3>
+        <ul>
+          <li>Grand Knight -</li><li>Chaplain -</li><li>Deputy Grand Knight -</li>
+          <li>Chancellor -</li><li>Recorder -</li><li>Financial Sec -</li>
+          <li>Treasurer -</li><li>Lecturer -</li><li>Advocate -</li>
+          <li>Warden -</li><li>Inside Guard -</li><li>Outside Guard -</li>
+          <li>Trustee (1st) -</li><li>Trustee (2nd) -</li><li>Trustee (3rd) -</li>
+        </ul>
+
+        <h3><u>Approve Minutes of Prior Meeting:</u></h3><p></p>
+        <h3><u>Chaplain's Message:</u></h3><p></p>
+        <h3><u>Grand Knight's Report:</u></h3><p></p>
+
+        <h3><u>Financial Report:</u></h3>
+        <ul>
+          <li>Started: $</li><li>Deposits: $</li><li>pig = $</li>
+          <li>Raffle Drawing = $</li><li>Owed Priest ed = $</li>
+          <li>Owed Raffle Drawings = $</li><li>Owe Supreme = $</li>
+          <li>Other Owed = $</li><li>Owed State: $</li>
+          <li>Actual ending Balance = $</li>
+        </ul>
+
+        <h3><u>Membership Report:</u></h3><p></p>
+        <ul><li>Total members:</li><li>New members:</li></ul>
+
+        <h3><u>Faith:</u></h3><p></p>
+        <h3><u>Family:</u></h3><p></p>
+        <h3><u>Community:</u></h3><p></p>
+        <h3><u>Fourth Degree Report:</u></h3><p></p>
+        <h3><u>Field Agent Report:</u></h3><p></p>
+        <h3><u>District Deputy Report:</u></h3><p></p>
+
+        <h3><u>Unfinished Business:</u></h3><p></p>
+        <h3><u>New Business:</u></h3><p></p>
+
+        <h3><u>Good of the Order:</u></h3>
+        <ul>
+          <li>Family of the Quarter</li>
+          <li>Knight Of The Quarter</li>
+          <li>Prayers for the Following:</li>
+        </ul><p></p>
+
+        <h3><u>Lecturer's Reflection:</u></h3><p></p>
+        <h3><u>Grand Knight's Summary:</u></h3><p></p>
+        <h3><u>Closing Prayer:</u></h3><p></p>
+        <h3><u>Closing Meeting At:</u></h3><p></p>
+        <h3><u>Next Meeting:</u></h3><p></p>
+        <h3><u>Recorder:</u></h3><p></p>
+        <h3><u>Motions:</u></h3><p></p>
+        <h3><u>Extra Notes:</u></h3><p></p>
+      `,
+    },
+    [editorLoaded, canEdit]
+  );
 
   useEffect(() => {
     setEditorLoaded(true);
   }, []);
 
-  const handleSave = async () => {
-    const content = editor?.getHTML();
+  async function handleSave() {
+    const content = editor?.getHTML() ?? "";
     try {
-      const response = await fetch('/api/saveNote', {
-        method: 'Post',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({date, notes: content }),
+      const res = await fetch("/api/saveNote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, notes: content }),
       });
-      const result = await response.json();
-      
-      if(response.ok) {
-        alert('Meeting Notes Saved');
-      }else {
-        alert('Error:' + result.error)
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(`Error: ${data.error || "Failed to save notes"}`);
+        return;
       }
+      alert("Meeting Notes Saved");
+    } catch (err) {
+      console.error("Failed to save notes:", err);
+      alert("Something went wrong saving the notes.");
     }
-    catch(error) {
-        console.error('Failed to save notes:', error);
-        alert('Something went wrong saving the notes.');
-    }
-
-    console.log({ date, notes: content });
-    alert("Saved!");
   }
-  const handleSendTestEmail = async () => {
+
+  async function handleSendTestEmail() {
     try {
-      const res = await fetch('/api/sendEmail', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/sendEmail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           date: new Date().toLocaleDateString(),
-          notes: '<p>This is a test email from the Knights app. ✅</p>',
-          to: 'fruge.patrick@gmail.com',
+          notes: "<p>This is a test email from the Knights app. ✅</p>",
+          to: "fruge.patrick@gmail.com",
         }),
       });
-  
-      // Check content-type first to avoid parsing non-JSON
-      const contentType = res.headers.get('content-type') || '';
-      const isJSON = contentType.includes('application/json');
-  
-      const data = isJSON ? await res.json() : { error: 'Unexpected response format.' };
-  
-      if (res.ok) {
-        alert('Email sent successfully!');
-      } else {
-        alert(`Email failed: ${data.error}`);
-      }
+      const isJSON = (res.headers.get("content-type") || "").includes("application/json");
+      const data = isJSON ? await res.json() : { error: "Unexpected response format." };
+
+      if (res.ok) alert("Email sent successfully!");
+      else alert(`Email failed: ${data.error || res.statusText}`);
     } catch (err) {
-      console.error('Client-side error:', err);
-      alert('Something went wrong sending the test email.');
+      console.error("Client-side error:", err);
+      alert("Something went wrong sending the test email.");
     }
-  };
-  
+  }
 
+  // Non-editors: hide the editor entirely
+  if (!canEdit) {
+    return null;
+  }
+
+  // Editors: show a collapsed card with toggle
   return (
-    <div className="card p-4">
-      <h3>New Meeting Notes</h3>
-      <div className="mb-3">
-        <label className="form-label">Date:</label>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="form-control"
-        />
-      </div>
+    <div className="card">
+      <div className="card-body">
+        {/* Toggle */}
+        <div className="d-flex justify-content-between align-items-center">
+          <h3 className="h5 m-0">New Meeting Notes</h3>
+          <button
+            className="btn btn-outline-primary btn-sm"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#newNotesCollapse"
+            aria-expanded="false"
+            aria-controls="newNotesCollapse"
+          >
+            Toggle Editor
+          </button>
+        </div>
 
-      <div className="mb-3">
-        <label className="form-label">Notes:</label>
-        <div className="border rounded p-2" style={{ minHeight: "300px" }}>
-          {editor ? <EditorContent editor={editor} /> : <p>Loading editor...</p>}
+        {/* Collapsible content */}
+        <div className="collapse mt-3" id="newNotesCollapse">
+          <div className="mb-3">
+            <label className="form-label">Date</label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="form-control"
+            />
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Notes</label>
+            <div className="border rounded p-2" style={{ minHeight: "300px" }}>
+              {editor ? (
+                <EditorContent editor={editor} />
+              ) : (
+                <p className="text-muted m-0">Loading editor…</p>
+              )}
+            </div>
+          </div>
+
+          <div className="d-flex gap-2">
+            <button className="btn btn-primary" onClick={handleSave}>
+              Save Notes
+            </button>
+            <button className="btn btn-secondary" onClick={handleSendTestEmail}>
+              Send Test Email
+            </button>
+          </div>
         </div>
       </div>
-
-      <button className="btn btn-primary" onClick={handleSave}>
-        Save Notes
-      </button>
-      <button
-      onClick={handleSendTestEmail} className="p-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">
-        Send Test Email
-      </button>
     </div>
   );
 }

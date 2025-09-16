@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Event {
+  id          Int      @id @default(autoincrement())
+  description String?  @db.Text
+  title       String?  @db.VarChar(100)
+  startTime   DateTime @map("start_time") @db.DateTime(0)
+  endTime     DateTime @map("end_time") @db.DateTime(0)
+  createdAt   DateTime @default(now()) @map("create_date") @db.DateTime(0)
+  createdBy   String   @map("created_by") @db.VarChar(32)
+  location    String?  @db.VarChar(255)
+  isAllDay    Boolean  @default(false) @map("is_all_day")
+
+  @@index([startTime, endTime], map: "idx_time")
+  @@map("events")
+}
+
+model meeting_notes {
+  id    String   @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  date  DateTime @unique(map: "uq_meeting_notes_date") @db.DateTime(0)
+  notes String   @db.Text
+}
+
+model members {
+  id         String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  firstname  String    @db.VarChar(100)
+  lastname   String    @db.VarChar(100)
+  memberid   Int
+  position   String?   @db.VarChar(100)
+  joindate   DateTime? @db.DateTime(0)
+  isActive   Boolean   @default(true)
+  email      String?   @db.Text
+  middleName String?   @db.VarChar(25)
+  address    String?   @db.VarChar(100)
+  suffix     String?   @db.VarChar(10)
+  homePhone  String?   @db.VarChar(20)
+  cellPhone  String?   @db.VarChar(20)
+}
+
+model officerpositions {
+  id    String  @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  title String? @db.VarChar(50)
+}
+
+model users {
+  id            Int        @id @default(autoincrement())
+  memberid      String     @unique(map: "memberid") @db.VarChar(32)
+  email         String?    @db.VarChar(255)
+  name          String?    @db.VarChar(100)
+  role          users_role @default(member)
+  password_hash String?    @db.VarChar(100)
+  create_date   DateTime   @default(now()) @db.DateTime(0)
+  last_login    DateTime?  @db.DateTime(0)
+}
+
+model VolunteerHour {
+  id          Int                     @id @default(autoincrement())
+  memberId    String                  @map("member_id") @db.VarChar(50)
+  date        DateTime                @db.Date
+  hours       Decimal                 @db.Decimal(5, 2)
+  description String?                 @db.Text
+  createdAt   DateTime                @default(now()) @map("created_at") @db.Timestamp(0)
+
+  @@map("volunteer_hours")
+}
+
+enum users_role {
+  member
+  admin
+  officer
+  delegate
+}
+
+enum volunteer_hours_status {
+  PENDING
+  APPROVED
+  REJECTED
+}

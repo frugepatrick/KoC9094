@@ -38,17 +38,17 @@ export default function MeetingNotesPage () {
                 <div>
                 <MeetingNotes />
                 </div>
-        
+                
                 <div className="mt-5">
-                <h2 className="text-2xl font-bold mb-4">Previous Meetings</h2>
-                {previousNotes.map((note, idx) => (
-                    <PreviousNotes
-                    key={idx}
-                    date={note.date}
-                    note={note.notes}
-                    onClick={() => openModal(note)}
-                    />
-                ))}
+                    <h2 className="text-2xl font-bold mb-4">Previous Meetings</h2>
+                    {previousNotes.map((note, idx) => (
+                        <PreviousNotes
+                        key={idx}
+                        date={note.date}
+                        note={note.notes}
+                        onClick={() => openModal(note)}
+                        />
+                    ))}
                 </div>
                 
                 {ShowModal && activeNote && (
