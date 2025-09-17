@@ -1,6 +1,6 @@
 // app/page.tsx
 import { getServerSession } from "next-auth";
-import { authOptions } from "./api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/authOptions";
 import UpcomingEvents from "./components/UpcomingEvents";
 import VolunteerHoursCard from "./components/VolunteerHoursCard";
 

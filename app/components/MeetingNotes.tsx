@@ -179,9 +179,6 @@ export default function MeetingNotes() {
             <button className="btn btn-primary" onClick={handleSave}>
               Save Notes
             </button>
-            <button className="btn btn-secondary" onClick={handleSendTestEmail}>
-              Send Test Email
-            </button>
           </div>
         </div>
       </div>

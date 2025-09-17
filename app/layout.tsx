@@ -5,7 +5,7 @@ import Link from "next/link";
 import Script from "next/script";
 import Providers from "@/providers";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // adjust path if different
+import { authOptions } from "@/lib/authOptions"; 
 
 export const metadata = {
   title: "Knights of Columbus -- 9094",
