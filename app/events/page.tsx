@@ -1,7 +1,7 @@
  'use client';
 
 /** The shape of an event coming from /api/events */
-export type EventRow = {
+type EventRow = {
   id: number;
   title: string;
   description: string | null;
@@ -23,7 +23,7 @@ type FormatDateRangeOptions = {
 };
 
 /** Helper: format a local date/time range nicely for display */
-export function formatDateRange(startTime: string | Date, endTime: string | Date, opts: FormatDateRangeOptions = {}): string {
+function formatDateRange(startTime: string | Date, endTime: string | Date, opts: FormatDateRangeOptions = {}): string {
   // (pseudocode)
     const start = new Date(startTime);
     const end = new Date(endTime);
@@ -149,7 +149,7 @@ function monthRangeISO(d = new Date()) {
 }
 
 /** Network call: fetch events from your API (optionally with from/to) */
-export async function fetchEvents(params?: { from?: string; to?: string }): Promise<EventRow[]> {
+async function fetchEvents(params?: { from?: string; to?: string }): Promise<EventRow[]> {
   const url = new URL('/api/events', typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
   if (params?.from) url.searchParams.set('from', params.from);
   if (params?.to) url.searchParams.set('to', params.to);
@@ -166,7 +166,7 @@ export async function fetchEvents(params?: { from?: string; to?: string }): Prom
 
 /** React hook: load events, expose loading/error/data + a refetch */
 import { useEffect, useState, useCallback } from "react";
-export function useEvents(range?: { from?: string; to?: string }) {
+function useEvents(range?: { from?: string; to?: string }) {
   const [events, setEvents] = useState<EventRow[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -192,7 +192,7 @@ export function useEvents(range?: { from?: string; to?: string }) {
 }
 
 /** Minimal EventItem "component" to render one event row */
-export function EventItem({ ev }: { ev: EventRow }) {
+function EventItem({ ev }: { ev: EventRow }) {
   const allDay = toBool(ev.isAllDay);
   const when = formatDateRange(ev.startTime, ev.endTime, {
     tz: 'America/Chicago',
