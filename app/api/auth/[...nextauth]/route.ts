@@ -2,6 +2,7 @@ import NextAuth, { Awaitable, NextAuthOptions, RequestInternal, User } from "nex
 import Credentials from "next-auth/providers/credentials";
 import pool from "@/lib/db";
 import bcrypt from "bcryptjs";
+import { AuthOptions } from "next-auth";
 import type { RowDataPacket } from "mysql2";
 
 //Give the shape of the row in `users` table
@@ -13,7 +14,7 @@ interface UserRow extends RowDataPacket {
     password_hash: string | null; //default = KOC9094!2025
 }
 
-export const authOptions : NextAuthOptions = ({
+const authOptions : NextAuthOptions = ({
     session: {strategy: "jwt"},
     providers: [
         Credentials({
