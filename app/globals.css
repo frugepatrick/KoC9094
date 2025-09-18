@@ -15,6 +15,11 @@ body {
 nav {
   background-color: #112866;
 }
+.navbar-nav {
+  margin-left: auto;
+  margin-right: auto;
+  transform: translateX(50%); /* adjust % until it feels right */
+}
 .koc-card{
   background-color: #112866 !important;
   color: white;
@@ -22,4 +27,15 @@ nav {
 }
 .memberInfo {
   display: inline;
+}
+.navbar .nav-link {
+  color: #ffffff !important;
+  font-weight: 700; /* bold */
+  margin: 0 0.75rem; /* Space in between links */
+  font-size: 1.1em;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus {
+  color: #f8f9fa !important; /* still white-ish, no dull grey */
 }
