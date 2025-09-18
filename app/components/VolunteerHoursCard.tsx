@@ -66,7 +66,9 @@ export default function VolunteerHoursCard() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;    
     const fd = new FormData(e.currentTarget);
+
     const payload = {
       workDate: String(fd.get("workDate") || ""),
       hours: Number(fd.get("hours") || 0),
@@ -86,7 +88,7 @@ export default function VolunteerHoursCard() {
       alert(`Failed to submit hours. ${msg || ""}`);
       return;
     }
-    (e.currentTarget as HTMLFormElement).reset();
+    form.reset();
     load();
   }
 
