@@ -1,0 +1,41 @@
+.kocCard {
+  background-color: #112866 !important;
+  color: white !important;
+}
+
+.memberName {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.kocCard strong {
+  font-weight: 600;
+  color: #d0d6f0; /* softer than pure white */
+}
+
+.kocCard .col-md-3,
+.kocCard .col-md-2 {
+  margin-bottom: 0.25rem;
+}
+
+.kocCardDetails {
+  background-color: #e9eefc;     /* soft blue */
+  border-left: 4px solid #ffc107; /* gold accent */
+  border-radius: 0.25rem;
+  padding: 0.75rem 1rem;
+  color: #112866;                /* deep blue text */
+}
+
+.kocCardDetails strong {
+  color: #112866;
+  font-weight: 700;
+}
+
+.value {
+  color: #000;
+  font-weight: 500;
+}
+
+.kocCardBody {
+  padding: 1rem 1.25rem;
+}

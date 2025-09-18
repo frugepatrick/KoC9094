@@ -20,14 +20,12 @@ nav {
   margin-right: auto;
   transform: translateX(50%); /* adjust % until it feels right */
 }
-.koc-card{
+.koc-card {
   background-color: #112866 !important;
-  color: white;
-  justify-content: center;
+  color: white !important;
 }
-.memberInfo {
-  display: inline;
-}
+
+
 .navbar .nav-link {
   color: #ffffff !important;
   font-weight: 700; /* bold */
