@@ -20,6 +20,8 @@ function next30DaysRange() {
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
   const end = new Date(start);
   end.setDate(start.getDate() + 30);
+
+
   return { from: start.toISOString(), to: end.toISOString() };
 }
 
@@ -61,15 +63,19 @@ export default function UpcomingEvents({ title = "Upcoming Events", limit = 6 }:
     }
   }
 
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
-
+  useEffect(() => { load();}, []);
+  //Setting this to prevent button double clicks later
+  const [isSaving , setIsSaving] = useState(false);
   // Bootstrap modal (open/close via data attributes; optional programmatic close if bundle is present)
   const createModalRef = useRef<HTMLDivElement | null>(null);
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget as HTMLFormElement;
+    if (isSaving) return;
+    // Use FormData to capture the fields that are populated by user
     const fd = new FormData(e.currentTarget);
-
+    // Capture the info from the payload.
     const payload = {
       title: String(fd.get("title") || ""),
       description: String(fd.get("description") || "") || null,
@@ -81,37 +87,46 @@ export default function UpcomingEvents({ title = "Upcoming Events", limit = 6 }:
 
     if (!payload.title) { alert("Title is required"); return; }
     if (!payload.startTime || !payload.endTime) { alert("Start/End are required"); return; }
-
-    const res = await fetch("/api/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const msg = await res.text().catch(() => "");
-      alert(`Failed to create event. ${msg || ""}`);
-      return;
-    }
-
-    // Reset form
-    e.currentTarget.reset();
-
-    // If bootstrap JS is loaded globally, close the modal programmatically
-    // (The global is available when you include bootstrap.bundle.js in layout)
     try {
-      // @ts-ignore
-      const Modal = (window as any)?.bootstrap?.Modal;
-      if (Modal && createModalRef.current) {
-        const instance = Modal.getOrCreateInstance(createModalRef.current);
-        instance.hide();
+      setIsSaving(true);
+      const res = await fetch("/api/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+          const msg = await res.text().catch(() => "");
+          alert(`Failed to create event. ${msg || ""}`);
+        return;
+      } else {
+        alert("Event Creation was Successful");
       }
-    } catch {}
 
-    // Reload list
-    load();
-  }
+      // Reset form
+      form.reset();
 
+      // If bootstrap JS is loaded globally, close the modal programmatically
+      // (The global is available when you include bootstrap.bundle.js in layout)
+      
+        // @ts-ignore
+        const Modal = (window as any)?.bootstrap?.Modal;
+        if (Modal && createModalRef.current) {
+          const instance = Modal.getOrCreateInstance(createModalRef.current);
+          instance.hide();
+        }
+    } catch (err) {
+        console.error("Unexpected error creating event", err);
+        alert("Something went wrong while creating the event. Please try again.");
+    }
+    finally {
+      // Set IsSaving back to faluse
+      setIsSaving(false);
+        //wait for the UI refresh
+      await load();
+  }    
+} 
+  // sorts by upcoming events first and also sets limit. Limit is set to 6 up above.
   const visible = [...events].sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()).slice(0, limit);
 
   return (
@@ -197,7 +212,8 @@ export default function UpcomingEvents({ title = "Upcoming Events", limit = 6 }:
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Event</button>
+                <button type="submit" className="btn btn-primary" disabled={isSaving}>
+                  {isSaving ? "Saving..." : "Save Event"}</button>
               </div>
             </form>
           </div>
