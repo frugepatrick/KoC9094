@@ -62,12 +62,13 @@ model users {
 }
 
 model VolunteerHour {
-  id          Int                     @id @default(autoincrement())
-  memberId    String                  @map("member_id") @db.VarChar(50)
-  date        DateTime                @db.Date
-  hours       Decimal                 @db.Decimal(5, 2)
-  description String?                 @db.Text
-  createdAt   DateTime                @default(now()) @map("created_at") @db.Timestamp(0)
+  id          Int                      @id @default(autoincrement())
+  memberId    String                   @map("member_id") @db.VarChar(50)
+  date        DateTime                 @db.Date
+  hours       Decimal                  @db.Decimal(5, 2)
+  description String?                  @db.Text
+  category    volunteer_hours_category
+  createdAt   DateTime                 @default(now()) @map("created_at") @db.Timestamp(0)
 
   @@map("volunteer_hours")
 }
@@ -79,8 +80,10 @@ enum users_role {
   delegate
 }
 
-enum volunteer_hours_status {
-  PENDING
-  APPROVED
-  REJECTED
+enum volunteer_hours_category {
+  COMMUNITY
+  FAITH
+  LIFE
+  FAMILY
+  PATRIOTISM
 }

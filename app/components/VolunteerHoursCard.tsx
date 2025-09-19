@@ -10,6 +10,7 @@ type HourRow = {
   workdate?: string;            // ISO
   hours: string | number;       // Prisma Decimal may come as string; cast to number
   description: string | null;
+  category: "COMMUNITY" | "FAITH" | "LIFE" | "FAMILY" | "PATRIOTISM";
   createdAt: string;
 };
 
@@ -73,6 +74,7 @@ export default function VolunteerHoursCard() {
       workDate: String(fd.get("workDate") || ""),
       hours: Number(fd.get("hours") || 0),
       description: String(fd.get("description") || "") || null,
+      category: String(fd.get("category") || "" || null,)
     };
     if (!payload.workDate || !payload.hours) {
       alert("Please provide a date and hours.");
@@ -119,13 +121,24 @@ export default function VolunteerHoursCard() {
             <div className="collapse mb-3" id="addHoursCollapse">
               <form onSubmit={handleSubmit}>
                 <div className="row g-2">
-                  <div className="col-12 col-md-3">
+                  <div className="col-2 col-md-3">
                     <label className="form-label">Date</label>
                     <input name="workDate" type="date" className="form-control" required />
                   </div>
-                  <div className="col-12 col-md-3">
+                  <div className="col-2 col-md-3">
                     <label className="form-label">Total Hours</label>
                     <input name="hours" type="number" step="0.25" min="0" className="form-control" required />
+                  </div>
+                  <div className="col-2 col-md-3">
+                    <label className="form-label">Category</label>
+                    <select name="category" className="form-select" required defaultValue="">
+                      <option value="" disabled>Select a category…</option>
+                      <option value="COMMUNITY">Community</option>
+                      <option value="FAITH">Faith</option>
+                      <option value="LIFE">Life</option>
+                      <option value="FAMILY">Family</option>
+                      <option value="PATRIOTISM">Patriotism</option>
+                    </select>
                   </div>
                   <div className="col-12 col-md-6">
                     <label className="form-label">Description (optional)</label>

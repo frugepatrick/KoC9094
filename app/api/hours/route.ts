@@ -3,10 +3,18 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 
-// Helper: build [from, to] as an inclusive date range on workDate
+// kill caching anywhere this runs
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
+export const runtime = "nodejs";
+
+const CATS = ["COMMUNITY","FAITH","LIFE","FAMILY","PATRIOTISM"] as const;
+type Cat = (typeof CATS)[number];
+
+// Helper: build [from, to] as an inclusive date range on date
 function rangeFilter(from?: string | null, to?: string | null) {
   if (!from || !to) return {};
-  // Interpret inputs as YYYY-MM-DD in UTC; make "to" inclusive by using next day (half-open interval)
   const gte = new Date(`${from}T00:00:00Z`);
   const toStart = new Date(`${to}T00:00:00Z`);
   const lt = new Date(toStart.getTime() + 24 * 60 * 60 * 1000);
@@ -26,16 +34,12 @@ export async function GET(req: NextRequest) {
     const to = searchParams.get("to");
 
     const items = await prisma.volunteerHour.findMany({
-      where: {
-        memberId,
-        ...rangeFilter(from, to),
-      },
+      where: { memberId, ...rangeFilter(from, to) },
       orderBy: [{ date: "desc" }, { id: "desc" }],
-      // select specific fields if needed
-      // select: { id: true, workDate: true, hours: true, description: true, memberId: true, createdAt: true },
+      select: { id: true, date: true, hours: true, description: true, memberId: true, category: true, createdAt: true },
     });
 
-    return NextResponse.json(items, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(items, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" } });
   } catch (e) {
     console.error(e);
     return new NextResponse("Server error", { status: 500 });
@@ -50,28 +54,29 @@ export async function POST(req: NextRequest) {
     const memberId = (session.user as any).memberId;
     if (!memberId) return new NextResponse("Missing memberId on session", { status: 400 });
 
-    // Expect the same keys the client sends:
-    const { workDate, hours, description } = await req.json();
+    // Expect: { workDate: string(YYYY-MM-DD or ISO), hours: number, description?: string, category: "COMMUNITY"|"FAITH"|... }
+    const { workDate, hours, description, category } = await req.json();
 
-    // Validate minimal shape
     if (!workDate || typeof hours !== "number" || hours <= 0) {
       return new NextResponse("Bad Request: invalid workDate/hours", { status: 400 });
+    }
+    const cat = String(category || "").toUpperCase() as Cat;
+    if (!CATS.includes(cat)) {
+      return new NextResponse("Bad Request: invalid category", { status: 400 });
     }
 
     const created = await prisma.volunteerHour.create({
       data: {
         memberId,
-        date: new Date(
-          /^\d{4}-\d{2}-\d{2}$/.test(workDate)
-            ? `${workDate}T00:00:00Z`
-            : workDate
-        ),
+        date: new Date(/^\d{4}-\d{2}-\d{2}$/.test(workDate) ? `${workDate}T00:00:00Z` : workDate),
         hours,
         description: description ?? null,
+        category: cat,
       },
+      select: { id: true, date: true, hours: true, description: true, memberId: true, category: true, createdAt: true },
     });
 
-    return NextResponse.json(created, { status: 201 });
+    return NextResponse.json(created, { status: 201, headers: { "Cache-Control": "no-store" } });
   } catch (err) {
     console.error(err);
     return new NextResponse("Server error", { status: 500 });
