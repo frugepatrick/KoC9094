@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
 
       return {
         memberId: g.memberId,
-        memberName: name || `Member #${g.memberId}`,
+        memberName: name || `${g.memberId}`,
         description: latest?.description ?? null, // <-- from hours, not members
         category: g.category,
         totalHours: Number.isFinite(total) ? total : 0,

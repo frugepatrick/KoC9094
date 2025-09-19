@@ -80,7 +80,7 @@ export default function MonthlyHoursReport() {
                 <table className="table table-sm align-middle">
                   <thead>
                     <tr>
-                      <th style={{minWidth: 180}}>Member</th>
+                      <th style={{minWidth: 180}}>Member Id</th>
                       <th style={{minWidth: 320}}>Description</th>
                       <th>Category</th>
                       <th className="text-end">Total Hours</th>
