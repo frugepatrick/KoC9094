@@ -20,6 +20,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <head>
+          {/* Creating apple icons for saving webpage as a icon on phone homescreen */}
+          <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         {/* Bootstrap CSS */}
         <link
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
