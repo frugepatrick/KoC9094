@@ -30,17 +30,22 @@ export async function GET(req: NextRequest) {
     });
 
     // 2) fetch member display info
-    const memberIds = Array.from(new Set(grouped.map(g => g.memberId)));
-    const members = memberIds.length
+    const memberIdsRaw = Array.from(new Set(grouped.map(g => g.memberId)));
+
+    // Coerce to numbers for Prisma (since members.memberid is Int)
+    const memberIdsNum = memberIdsRaw
+    .map(v => (typeof v === "number" ? v : Number(String(v))))
+    .filter(n => Number.isInteger(n)); // keep only valid ints
+    
+    const members = memberIdsNum.length
       ? await prisma.members.findMany({
-          where: { id: { in: memberIds } },
-          select: { id: true, firstname: true, lastname: true }, // no email/description here
+          where: { memberid: { in: memberIdsNum } },
+          select: { memberid: true, firstname: true, lastname: true },
         })
       : [];
-    const mIndex = new Map(members.map(m => [m.id, m]));
+    const mIndex = new Map(members.map(m => [String(m.memberid), m]));
 
     // 3) for each group, get the latest description within the month
-    //    (N+1; fine for small sets. if it grows, we can batch this later)
     const rows = await Promise.all(grouped.map(async (g) => {
       const latest = await prisma.volunteerHour.findFirst({
         where: {
@@ -52,12 +57,12 @@ export async function GET(req: NextRequest) {
         select: { description: true },
       });
 
-      const m = mIndex.get(g.memberId);
+      const m = mIndex.get(String(g.memberId));
       const total = Number(g._sum?.hours ?? 0);
       const name = m ? `${m.firstname ?? ""} ${m.lastname ?? ""}`.trim() : "";
 
       return {
-        memberId: g.memberId,
+        memberId: String(g.memberId),
         memberName: name || `${g.memberId}`,
         description: latest?.description ?? null, // <-- from hours, not members
         category: g.category,
@@ -66,6 +71,7 @@ export async function GET(req: NextRequest) {
     }));
 
     const payload: any = { month: resolved, rows };
+    console.log(payload);
     if (debug) payload.debug = { utcRange: { start: start.toISOString(), end: end.toISOString() } };
 
     return NextResponse.json(payload, { headers: { "Cache-Control": "no-store" } });

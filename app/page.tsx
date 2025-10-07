@@ -44,8 +44,7 @@ export default async function HomePage() {
               <div className="mt-4">
                 <VolunteerHoursCard />
               </div>
-        </div>
-        
+        </div>        
       )}
     </div>
   );

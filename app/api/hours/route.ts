@@ -15,8 +15,8 @@ type Cat = (typeof CATS)[number];
 // Helper: build [from, to] as an inclusive date range on date
 function rangeFilter(from?: string | null, to?: string | null) {
   if (!from || !to) return {};
-  const gte = new Date(`${from}T00:00:00Z`);
-  const toStart = new Date(`${to}T00:00:00Z`);
+  const gte = new Date(`${from}T00:00:00`);
+  const toStart = new Date(`${to}T00:00:00`);
   const lt = new Date(toStart.getTime() + 24 * 60 * 60 * 1000);
   return { date: { gte, lt } };
 }
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     const created = await prisma.volunteerHour.create({
       data: {
         memberId,
-        date: new Date(/^\d{4}-\d{2}-\d{2}$/.test(workDate) ? `${workDate}T00:00:00Z` : workDate),
+        date: new Date(/^\d{4}-\d{2}-\d{2}$/.test(workDate) ? `${workDate}T00:00:00` : workDate),
         hours,
         description: description ?? null,
         category: cat,

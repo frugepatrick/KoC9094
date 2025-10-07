@@ -62,7 +62,7 @@ export default function MonthlyHoursReport() {
             <input type="month" className="form-control" value={month} onChange={(e) => setMonth(e.target.value)} />
           </div>
           <button className="btn btn-secondary mb-1" onClick={() => load()}>Refresh</button>
-          <a className="btn btn-outline-primary mb-1" href={`/api/reports/monthly-hours.csv?month=${encodeURIComponent(month)}`}>
+          <a className="btn btn-outline-primary mb-1" href={`/api/reports/monthly-report.csv?month=${encodeURIComponent(month)}`}>
             Download CSV
           </a>
         </div>
@@ -80,7 +80,7 @@ export default function MonthlyHoursReport() {
                 <table className="table table-sm align-middle">
                   <thead>
                     <tr>
-                      <th style={{minWidth: 180}}>Member Id</th>
+                      <th style={{minWidth: 180}}>Member</th>
                       <th style={{minWidth: 320}}>Description</th>
                       <th>Category</th>
                       <th className="text-end">Total Hours</th>

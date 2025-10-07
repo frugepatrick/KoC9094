@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
+import toast from 'react-hot-toast';
 
 type HourRow = {
   id: number;
@@ -35,7 +36,7 @@ export default function VolunteerHoursCard() {
   const s = String(v).trim();
 
   // "2025-09-14"
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(`${s}T00:00:00Z`);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(`${s}T00:00:00`);
   // ISO already
   if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return new Date(s);
   // millis
@@ -90,6 +91,7 @@ export default function VolunteerHoursCard() {
       alert(`Failed to submit hours. ${msg || ""}`);
       return;
     }
+    toast.success("Volunteer Hours Creation was Successful");
     form.reset();
     load();
   }
@@ -161,11 +163,12 @@ export default function VolunteerHoursCard() {
               <div key={r.id} className="list-group-item d-flex justify-content-between align-items-center">
                 <div>
                   <div className="fw-semibold">
-                    {dt ? dt.toLocaleDateString() : "—"} · {Number(r.hours || 0).toFixed(2)} hrs
+                    {/* Must use the below date to counter the UTC London Shift */}
+                    {dt ? dt.toLocaleDateString(undefined, { timeZone: 'UTC' }) : "—"} · {Number(r.hours || 0).toFixed(2)} hrs
+                     · {Number(r.hours || 0).toFixed(2)} hrs
                   </div>
                   {r.description && <div className="small text-muted">{r.description}</div>}
                 </div>
-                {/* no status pill anymore */}
               </div>
             );
           })}

@@ -21,21 +21,27 @@ export async function GET(req: NextRequest) {
     orderBy: { memberId: "asc" },
   });
 
-  const memberIds = grouped.map(g => g.memberId);
-  const members = await prisma.members.findMany({
-    where: { id: { in: memberIds } },
-    select: { id: true, firstname: true, lastname: true, email: true },
-  });
-  const mIndex = new Map(members.map(m => [m.id, m]));
+  const memberIdsRaw = Array.from(new Set(grouped.map(g => g.memberId)));
 
-  const header = ["Month","Member ID","Name","Email","Total Hours"];
+    // Coerce to numbers for Prisma (since members.memberid is Int)
+  const memberIdsNum = memberIdsRaw
+  .map(v => (typeof v === "number" ? v : Number(String(v))))
+  .filter(n => Number.isInteger(n)); // keep only valid ints
+
+  const members = await prisma.members.findMany({
+    where: { memberid: { in: memberIdsNum } },
+    select: { memberid: true, firstname: true, lastname: true },
+  });
+  const mIndex = new Map(members.map(m => [String(m.memberid), m]));
+
+  const header = ["Month","Member ID","Name","Total Hours"];
   const lines = [header.join(",")];
+
   for (const g of grouped) {
-    const m = mIndex.get(g.memberId);
-    const name = m ? `${m.firstname} ${m.lastname}`.trim() : `Member #${g.memberId}`;
-    const email = m?.email || "";
+    const m = mIndex.get(String(g.memberId));
+    const name = m ? `${m.firstname} ${m.lastname}`.trim() : `Member#: ${g.memberId}`;
     const total = Number(g._sum.hours ?? 0).toFixed(2);
-    lines.push([resolved, String(g.memberId), `"${name.replaceAll('"','""')}"`, email, total].join(","));
+    lines.push([resolved, String(g.memberId), `"${name.replaceAll('"','""')}"`, total].join(","));
   }
 
   const csv = lines.join("\n");

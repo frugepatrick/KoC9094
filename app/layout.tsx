@@ -6,6 +6,8 @@ import Script from "next/script";
 import Providers from "@/providers";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import ToasterClient from "./ToasterClient";
+import 'bootstrap/dist/css/bootstrap.min.css'
 
 export const metadata = {
   title: "Knights of Columbus -- 9094",
@@ -102,6 +104,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <footer className="text-white text-center py-3 mt-auto" style={{ backgroundColor: "var(--KoCBlue)" }}>
             <p className="mb-0">© 2025 Knights of Columbus Council 9094</p>
           </footer>
+
+          {/* Global Toaster */}
+          <ToasterClient/>
         </Providers>
 
         {/* Bootstrap JS (bundle includes Popper) */}
