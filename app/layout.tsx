@@ -24,16 +24,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <head>
           {/* Creating apple icons for saving webpage as a icon on phone homescreen */}
           <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        {/* Bootstrap CSS */}
-        <link
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet"
-        />
       </head>
       <body className="d-flex flex-column min-vh-100">
         <Providers>
           {/* Navbar */}
-          <nav className="navbar navbar-expand-lg navbar-dark border-bottom shadow-sm">
+          <nav className="navbar navbar-expand-lg navbar-dark border-bottom shadow-sm sticky-top">
             <div className="container-fluid">
               {/* Brand: logo + title */}
               <Link href="/" className="navbar-brand d-flex align-items-center text-decoration-none">
@@ -69,7 +64,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
               {/* Collapsible links */}
               <div className="collapse navbar-collapse" id="navbarNav" >
-                <ul className="navbar-nav" >
+                <ul className="navbar-nav ms-auto" >
                   <li className="nav-item" >
                     <Link href="/" className="nav-link fw-bold">Home</Link>
                   </li>
@@ -83,11 +78,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     <Link href="/about" className="nav-link fw-bold">About</Link>
                   </li>
                   <li className="nav-item">
-                    <Link href="/meetingNotes" className="nav-link fw-bold">Meeting Notes</Link>
+                    <Link href="/meetingNotes" className="nav-link fw-bold text-nowrap">Meeting Notes</Link>
                   </li>
                   {adminOrOfficer && (
                     <li className="nav-item">
-                      <Link href="/admin/hoursReport" className="nav-link fw-bold">Hours Report</Link>
+                      <Link href="/admin/hoursReport" className="nav-link fw-bold text-nowrap">Hours Report</Link>
                     </li>
                   )}
                 </ul>
@@ -96,9 +91,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </nav>
 
           {/* Main */}
-          <main style={{ backgroundColor: "var(--KoCGrey)" }}>
-            <div className="container my-4 flex-grow-1">{children}</div>
+          <main className="flex-grow-1" style={{ backgroundColor: "var(--KoCGrey)" }}>
+            <div className="container my-4">{children}</div>
           </main>
+
 
           {/* Footer */}
           <footer className="text-white text-center py-3 mt-auto" style={{ backgroundColor: "var(--KoCBlue)" }}>

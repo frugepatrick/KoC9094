@@ -123,15 +123,15 @@ export default function VolunteerHoursCard() {
             <div className="collapse mb-3" id="addHoursCollapse">
               <form onSubmit={handleSubmit}>
                 <div className="row g-2">
-                  <div className="col-2 col-md-3">
+                  <div className="col-12 col-sm-4 col-md-3">
                     <label className="form-label">Date</label>
                     <input name="workDate" type="date" className="form-control" required />
                   </div>
-                  <div className="col-2 col-md-3">
+                  <div className="col-12 col-sm-4 col-md-3">
                     <label className="form-label">Total Hours</label>
                     <input name="hours" type="number" step="0.25" min="0" className="form-control" required />
                   </div>
-                  <div className="col-2 col-md-3">
+                  <div className="col-12 col-sm-4 col-md-3">
                     <label className="form-label">Category</label>
                     <select name="category" className="form-select" required defaultValue="">
                       <option value="" disabled>Select a category…</option>
