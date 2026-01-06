@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     const items = await prisma.volunteerHour.findMany({
       where: { memberId, ...rangeFilter(from, to) },
       orderBy: [{ date: "desc" }, { id: "desc" }],
-      select: { id: true, date: true, hours: true, description: true, memberId: true, category: true, createdAt: true },
+      select: { id: true, date: true, hours: true, description: true, memberId: true, category: true, subcategory: true, createdAt: true },
     });
 
     return NextResponse.json(items, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" } });
@@ -51,11 +51,14 @@ export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session?.user) return new NextResponse("Unauthorized", { status: 401 });
 
-    const memberId = (session.user as any).memberId;
-    if (!memberId) return new NextResponse("Missing memberId on session", { status: 400 });
+    const sessionMemberId = (session.user as any).memberId;
+    const role = (session.user as any).role; // make sure you include this in session
+    const isAdmin = role === "admin" || role === "officer";
 
-    // Expect: { workDate: string(YYYY-MM-DD or ISO), hours: number, description?: string, category: "COMMUNITY"|"FAITH"|... }
-    const { workDate, hours, description, category } = await req.json();
+    if (!sessionMemberId) return new NextResponse("Missing memberId on session", { status: 400 });
+
+    // Expect: { workDate: string(YYYY-MM-DD or ISO), hours: number, description?: string, category: "COMMUNITY"|"FAITH"|..., subcategory?: string }
+    const { workDate, hours, description, category, subcategory, memberId: bodyMemberId } = await req.json();
 
     if (!workDate || typeof hours !== "number" || hours <= 0) {
       return new NextResponse("Bad Request: invalid workDate/hours", { status: 400 });
@@ -64,16 +67,26 @@ export async function POST(req: NextRequest) {
     if (!CATS.includes(cat)) {
       return new NextResponse("Bad Request: invalid category", { status: 400 });
     }
+    if (!subcategory || typeof subcategory !== "string" || !subcategory.trim()) {
+      return new NextResponse("Bad Request: subcategory required", { status: 400 });
+    }
+
+    const targetMemberId = isAdmin && bodyMemberId ? String(bodyMemberId) : String(sessionMemberId);
+
+    // Optional: only admins can set subcategory; regular users stay "old way"
+    const finalSubcategory =
+      isAdmin ? (subcategory ? String(subcategory).trim() : null) : null;
 
     const created = await prisma.volunteerHour.create({
       data: {
-        memberId,
+        memberId: targetMemberId,
         date: new Date(/^\d{4}-\d{2}-\d{2}$/.test(workDate) ? `${workDate}T00:00:00` : workDate),
         hours,
         description: description ?? null,
         category: cat,
+        subcategory: finalSubcategory,
       },
-      select: { id: true, date: true, hours: true, description: true, memberId: true, category: true, createdAt: true },
+      select: { id: true, date: true, hours: true, description: true, memberId: true, category: true, subcategory: true, createdAt: true },
     });
 
     return NextResponse.json(created, { status: 201, headers: { "Cache-Control": "no-store" } });

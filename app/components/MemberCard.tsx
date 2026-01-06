@@ -3,9 +3,9 @@ import styles from "./MemberCard.module.css";
 
 export interface MemberCardProps {
   id: string;
-  memberId: number;
-  firstName: string;
-  lastName: string;
+  memberid: number;
+  firstname: string;
+  lastname: string;
   email: string | null;
   joinDate: string | null;
   position: string | null;
@@ -16,9 +16,9 @@ export interface MemberCardProps {
 }
 export default function MemberCard({
   id,
-  memberId,
-  firstName,
-  lastName,
+  memberid,
+  firstname,
+  lastname,
   email,
   joinDate,
   position,
@@ -32,13 +32,13 @@ export default function MemberCard({
       <div className={`card-body ${styles.kocCardBody}`}>
         <div className="row align-items-center">
           <div className={`col-md-2 fw-bold ${styles.memberName}`}>
-            {firstName} {lastName}
+            {firstname} {lastname}
           </div>
           <div className="col-md-3">
             <strong>Position:</strong> {position ?? "Member"}
           </div>
           <div className="col-md-3 text-start">
-            <strong>MemberId:</strong> {memberId ?? "-"}
+            <strong>MemberId:</strong> {memberid ?? "-"}
           </div>
           <div className="col-md-3 text-start">
             <strong>Email:</strong> {email ?? "-"}

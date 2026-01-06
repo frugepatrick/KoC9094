@@ -1,46 +1,45 @@
 import {NextResponse} from "next/server";
-import pool from "@/lib/db";
-import { RowDataPacket } from "mysql2";
-
-interface MemberRow extends RowDataPacket {
-    id: string;
-    memberId: number;
-    firstName: string;
-    lastName: string;
-    email: string | null;
-    joinDate: string | null;
-    position: string | null;
-    address: string | null;
-    homePhone: string | null;
-    cellPhone: string | null;
-    suffix: string | null;
-}
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
     try {
         console.log("Attempting to return list of members...");
         //Select from our DB
-        const [rows] = await pool.query<MemberRow[]> (
-        `
-            SELECT
-            id,
-            CAST(memberid AS CHAR) AS memberId,
-            firstname AS firstName,
-            lastname  AS lastName,
-            position,
-            DATE_FORMAT(joindate, '%Y-%m-%d') AS joinDate,
-            email,
-            address,
-            homePhone,
-            cellPhone,
-            suffix
-            
-            FROM members
-            ORDER BY lastname, firstname
-        `
-        );
+        const members = await prisma.members.findMany({
+            select: {
+                id: true,
+                memberid: true,
+                firstname: true,
+                lastname: true,
+                position: true,
+                joindate: true,
+                email: true,
+                address: true,
+                homePhone: true,
+                cellPhone: true,
+                suffix: true,
+            },
+            orderBy: [{lastname: "asc"}, {firstname:"asc"}],
+        });
+
+        const rows = members.map((m) => ({
+            id: m.id,
+            memberid: m.memberid,                // rename
+            firstname: m.firstname,
+            lastname: m.lastname,
+            email: m.email,
+            joinDate: m.joindate
+                ? m.joindate.toISOString().slice(0, 10)
+                : null,
+            position: m.position,
+            address: m.address,
+            homePhone: m.homePhone,
+            cellPhone: m.cellPhone,
+            suffix: m.suffix,
+        }));
+        console.log("first row:", rows?.[0]);
         // return the json or empty array/tuple
-        return NextResponse.json(rows ?? [], {
+        return NextResponse.json(rows, {
             //don't cache the response
             headers: {"Cache-Control": "no-store"},
         /*  

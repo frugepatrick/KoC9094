@@ -5,9 +5,9 @@ import MemberCard, { MemberCardProps } from "../components/MemberCard";
 // Match what your API actually returns! Adjust if your API uses firstname/lastname etc.
 type MemberRow = {
   id: string;
-  memberId: number;          // string if DB column is VARCHAR
-  firstName: string;
-  lastName: string;
+  memberid: number;          // string if DB column is VARCHAR
+  firstname: string;
+  lastname: string;
   email: string | null;
   joinDate: string | null;   // "YYYY-MM-DD"
   position: string | null;
@@ -64,13 +64,13 @@ export default function MembersPage() {
   // Search
   const filtered = q
     ? members.filter((m) => {
-        const hay = `${m.firstName} ${m.lastName} ${m.memberId} ${m.email ?? "-"}`.toLowerCase();
+        const hay = `${m.firstname} ${m.lastname} ${m.memberid} ${m.email ?? "-"}`.toLowerCase();
         return hay.includes(q.toLowerCase());
       })
     : members;
 
   // Sort AFTER filtering so the shown list is sorted
-  const sorted = sortMembers(filtered, "lastName");
+  const sorted = sortMembers(filtered, "lastname");
 
   if (loading) return <div className="p-4">Loading Members....</div>;
 
@@ -97,11 +97,11 @@ export default function MembersPage() {
 
         {sorted.map((m) => {
           const cardProps: MemberCardProps = {
-            firstName: m.firstName,
-            lastName: m.lastName,
+            firstname: m.firstname,
+            lastname: m.lastname,
             joinDate: m.joinDate ?? "-",
             position: m.position ?? "Member",
-            memberId: m.memberId ?? "-",
+            memberid: m.memberid,
             email: m.email ?? "-",
             id: m.id,
             address: m.address ?? "-",

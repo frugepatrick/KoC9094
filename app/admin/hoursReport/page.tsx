@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from "react";
+import VolunteerHoursCard from "@/app/components/VolunteerHoursCard";
 
 type Row = {
   memberId: string;                 // string, not number
@@ -105,6 +106,9 @@ export default function MonthlyHoursReport() {
             )}
           </>
         )}
+      </div>
+      <div>
+        <VolunteerHoursCard mode="admin"/>
       </div>
     </div>
   );

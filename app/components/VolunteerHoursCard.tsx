@@ -12,15 +12,106 @@ type HourRow = {
   hours: string | number;       // Prisma Decimal may come as string; cast to number
   description: string | null;
   category: "COMMUNITY" | "FAITH" | "LIFE" | "FAMILY" | "PATRIOTISM";
+  subcategory?: string | null;
   createdAt: string;
 };
 
-export default function VolunteerHoursCard() {
+type MemberHit = {
+  id: string;
+  memberid: number;
+  firstname: string;
+  lastname: string;
+};
+
+type Category = HourRow["category"];
+
+type HoursCreatePayload = {
+  workDate: string;
+  hours: number;
+  description: string | null;
+  category: Category;
+  subcategory?: string | null;
+  memberId?: string;
+};
+
+  const SUBCATEGORIES: Record<
+    HourRow["category"], 
+    {value: string; label: string}[]
+    > = {
+      FAITH: [
+        {value: "Into the Breach", label: "Into the Breach"},
+        {value: "Pilgrim Icon Program", label: "Pilgrim Icon Program"},
+        {value: "Build the Domestic Church Kiosk", label: "Build the Domestic Church Kiosk"},
+        {value: "Rosary", label: "Rosary"},
+        {value: "Spiritual Reflection", label: "Spiritual Reflection"},
+        {value: "Holy Hour", label: "Holy Hour"},
+        {value: "Sacramental Gifts", label: "Sacramental Gifts"},
+        {value: "RSVP", label: "RSVP"},
+        {value: "Other", label: "Other"}
+      ],
+      COMMUNITY: [
+        {value: "Family of the Month", label: "Family of the Month"},
+        {value: "Keep Christ in Christmas", label: "Keep Christ in Christmas"},
+        {value: "Family Fully Alive", label: "Family Fully Alive"},
+        {value: "Consecration to the Holy Family", label: "Consecration to the Holy Family"},
+        {value: "Family Prayer Night", label: "Family Prayer Night"},
+        {value: "Good Friday Family Promotion", label: "Good Friday Family Promotion"},
+        {value: "Food for Families", label: "Food for Families"},
+        {value: "Other", label: "Other"}
+      ],
+      LIFE: [
+        {value: "Disaster Prepardeness", label: "Disaster Prepardeness"},
+        {value: "Free Throw Championship", label: "Free Throw Championship"},
+        {value: "Soccer Challenge", label: "Soccer Challenge"},
+        {value: "Helping Hands", label: "Helping Hands"},
+        {value: "Catholic Citizenship Essay Contest", label: "Catholic Citizenship Essay Contest"},
+        {value: "Coats for Kids", label: "Coats for Kids"},
+        {value: "Global Wheelchair", label: "Global Wheelchair"},
+        {value: "Habitat for Humanity", label: "Habitat for Humanity"},
+        {value: "Other", label: "Other"},
+      ],
+      FAMILY: [
+        {value: "Christian Refugee Relief", label: "Christian Refugee Relief"},
+        {value: "Silver Rose", label: "Silver Rose"},
+        {value: "Pregnancy Center Support/ ASAP", label: "Pregnancy Center Support/ ASAP"},
+        {value: "Novena for Life", label: "Novena for Life"},
+        {value: "Mass for People with Special Needs", label: "Mass for People with Special Needs"},
+        {value: "March for Life", label: "March for Life"},
+        {value: "Special Olympics", label: "Special Olympics"},
+        {value: "Ultrasound Initiative", label: "Ultrasound Initiative"},
+        {value: "Other", label: "Other"},
+      ],
+      PATRIOTISM: [
+        {value: "Other", label: "Other"},
+      ]
+    };
+
+export default function VolunteerHoursCard({mode = "user"} : {mode?: "user" | "admin"}) {
+
   const { data: session } = useSession();
+  const role = (session?.user as any)?.role;
+  const canUseAdminMode = mode === "admin" && (role === "admin" || role === "officer");
+
   const [rows, setRows] = useState<HourRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
+  // controlled form state
+  const [category, setCategory] = useState<Category | "">("");
+  const [subcategory, setSubcategory] = useState<string>("");
+  // Reset subcat when you change cat
+  useEffect(() => {
+    setSubcategory("");
+    }, [category]);
+
+  //show subcategory based on category
+  const subcategoryOptions = category ? SUBCATEGORIES[category] : [];
+
+  //admin search state
+  const [memberQuery, setMemberQuery] = useState("");
+  const [memberHits, setMemberHits] = useState<MemberHit[]>([]);
+  const [selectedMember, setSelectedMember] = useState<MemberHit | null>(null);
+  const [memberLoading, setMemberLoading] = useState(false);
 
   // default range: current year
   const { from, to } = useMemo(() => {
@@ -46,8 +137,7 @@ export default function VolunteerHoursCard() {
   return null;
 }
 
-
-  async function load() {
+async function load() {
     setLoading(true);
     setErr(null);
     try {
@@ -61,8 +151,35 @@ export default function VolunteerHoursCard() {
       setLoading(false);
     }
   }
-
   useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
+
+  // Debounced member search (admin only)
+  useEffect(() => {
+    if (!canUseAdminMode) return;
+
+    const q = memberQuery.trim();
+    if (q.length < 2) {
+      setMemberHits([]);
+      return;
+    }
+
+    const t = setTimeout(async () => {
+      try {
+        setMemberLoading(true);
+        const res = await fetch(`/api/members/search?q=${encodeURIComponent(q)}`, { cache: "no-store" });
+        if (!res.ok) {
+          setMemberHits([]);
+          return;
+        }
+        const data = await res.json();
+        setMemberHits(Array.isArray(data) ? data : []);
+      } finally {
+        setMemberLoading(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(t);
+  }, [memberQuery, canUseAdminMode]);
 
   const totalHours = rows.reduce((acc, r) => acc + Number(r.hours || 0), 0);
 
@@ -71,14 +188,25 @@ export default function VolunteerHoursCard() {
     const form = e.currentTarget;    
     const fd = new FormData(e.currentTarget);
 
-    const payload = {
+    const payload: HoursCreatePayload = {
       workDate: String(fd.get("workDate") || ""),
       hours: Number(fd.get("hours") || 0),
       description: String(fd.get("description") || "") || null,
-      category: String(fd.get("category") || "" || null,)
+      category: String(fd.get("category") || "") as Category,      
     };
-    if (!payload.workDate || !payload.hours) {
-      alert("Please provide a date and hours.");
+
+    if (canUseAdminMode) {
+      payload.subcategory = String(fd.get("subcategory") || "" || null);
+      // choose what to store in volunteer_hours.member_id
+      // If you want to store the KofC member number:
+      payload.memberId = selectedMember ? String(selectedMember.memberid) : "";
+    }
+    if (!payload.workDate || !payload.hours || !payload.category) {
+      alert("Please provide a date, hours, and category.");
+      return;
+    }
+    if (canUseAdminMode && (!payload.subcategory || !payload.memberId)) {
+      alert("Admin: please select member + subcategory.");
       return;
     }
     const res = await fetch("/api/hours", {
@@ -93,8 +221,15 @@ export default function VolunteerHoursCard() {
     }
     toast.success("Volunteer Hours Creation was Successful");
     form.reset();
+    setCategory("");
+    setSubcategory("");
+    setMemberQuery("");
+    setMemberHits([]);
+    setSelectedMember(null);
     load();
   }
+
+  
 
   return (
     <div className="card shadow-sm">
@@ -127,13 +262,21 @@ export default function VolunteerHoursCard() {
                     <label className="form-label">Date</label>
                     <input name="workDate" type="date" className="form-control" required />
                   </div>
+
                   <div className="col-12 col-sm-4 col-md-3">
                     <label className="form-label">Total Hours</label>
                     <input name="hours" type="number" step="0.25" min="0" className="form-control" required />
                   </div>
+
                   <div className="col-12 col-sm-4 col-md-3">
                     <label className="form-label">Category</label>
-                    <select name="category" className="form-select" required defaultValue="">
+                    <select
+                      name="category"
+                      className="form-select"
+                      required
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value as Category)}
+                    >
                       <option value="" disabled>Select a category…</option>
                       <option value="COMMUNITY">Community</option>
                       <option value="FAITH">Faith</option>
@@ -142,11 +285,78 @@ export default function VolunteerHoursCard() {
                       <option value="PATRIOTISM">Patriotism</option>
                     </select>
                   </div>
+
+                  {canUseAdminMode && (
+                    <div className="col-12 col-sm-4 col-md-3">
+                      <label className="form-label">Subcategory</label>
+                      <select
+                        name="subcategory"
+                        className="form-select"
+                        required
+                        value={subcategory}
+                        onChange={(e) => setSubcategory(e.target.value)}
+                        disabled={!category}
+                      >
+                        <option value="" disabled>
+                          {category ? "Select a subcategory…" : "Select a category first…"}
+                        </option>
+                        {subcategoryOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   <div className="col-12 col-md-6">
-                    <label className="form-label">Description (optional)</label>
-                    <input name="description" className="form-control" placeholder="What did you work on?" />
+                    <label className="form-label">Description</label>
+                    <input name="description" className="form-control" placeholder="What did you work on?" required />
                   </div>
+
+                  {canUseAdminMode && (
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">Member</label>
+                      <input
+                        className="form-control"
+                        placeholder="Search member name or member #…"
+                        value={memberQuery}
+                        onChange={(e) => {
+                          setMemberQuery(e.target.value);
+                          setSelectedMember(null);
+                        }}
+                      />
+
+                      {!!memberLoading && <div className="small text-muted mt-1">Searching…</div>}
+
+                      {!selectedMember && memberHits.length > 0 && (
+                        <div className="list-group mt-1">
+                          {memberHits.map((m) => (
+                            <button
+                              type="button"
+                              key={m.id}
+                              className="list-group-item list-group-item-action"
+                              onClick={() => {
+                                setSelectedMember(m);
+                                setMemberHits([]);
+                                setMemberQuery(`${m.firstname} ${m.lastname} (${m.memberid})`);
+                              }}
+                            >
+                              {m.firstname} {m.lastname} ({m.memberid})
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {selectedMember && (
+                        <div className="small text-muted mt-1">
+                          Selected: <strong>{selectedMember.firstname} {selectedMember.lastname}</strong> — Member #{selectedMember.memberid}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
+
                 <div className="mt-2">
                   <button className="btn btn-primary" type="submit">Submit</button>
                 </div>
@@ -155,30 +365,7 @@ export default function VolunteerHoursCard() {
           </>
         )}
 
-      {!loading && rows.length > 0 && (
-        <div className="list-group list-group-flush">
-          {rows.slice(0, 5).map((r) => {
-            const dt = parseDateLike((r as any).date ?? (r as any).workDate ?? r.createdAt);
-            return (
-              <div key={r.id} className="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                  <div className="fw-semibold">
-                    {/* Must use the below date to counter the UTC London Shift */}
-                    {dt ? dt.toLocaleDateString(undefined, { timeZone: 'UTC' }) : "—"} · {Number(r.hours || 0).toFixed(2)} hrs
-                     · {Number(r.hours || 0).toFixed(2)} hrs
-                  </div>
-                  {r.description && <div className="small text-muted">{r.description}</div>}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-)}
-
-
-        {!loading && rows.length === 0 && (
-          <div className="text-muted">No hours submitted yet.</div>
-        )}
+        {/* keep your existing list rendering below */}
       </div>
     </div>
   );
