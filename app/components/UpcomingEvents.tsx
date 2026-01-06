@@ -10,8 +10,8 @@ type EventRow = {
   description: string | null;
   location: string | null;
   isAllDay: boolean;
-  startTime: string;  // ISO string coming from NextResponse.json(Date)
-  endTime: string;    // ISO string
+  startTime: string;  // 
+  endTime: string;    // 
   createdBy: string;
 };
 
@@ -76,14 +76,26 @@ export default function UpcomingEvents({ title = "Upcoming Events", limit = 6 }:
     // Use FormData to capture the fields that are populated by user
     const fd = new FormData(e.currentTarget);
     // Capture the info from the payload.
+    const startLocal = String(fd.get("startTime") || "");
+    const endLocal = String(fd.get("endTime") || "");
+
+    // Convert "YYYY-MM-DDTHH:mm" (local) -> Date -> ISO UTC string
+    const startISO = new Date(startLocal).toISOString();
+    const endISO = new Date(endLocal).toISOString();
+
     const payload = {
-      title: String(fd.get("title") || ""),
-      description: String(fd.get("description") || "") || null,
-      location: String(fd.get("location") || "") || null,
+      title: String(fd.get("title") || "").trim(),
+      description: String(fd.get("description") || "").trim() || null,
+      location: String(fd.get("location") || "").trim() || null,
       isAllDay: fd.get("isAllDay") === "on",
-      startTime: String(fd.get("startTime") || ""),
-      endTime: String(fd.get("endTime") || ""),
+      startTime: startISO,   // ✅
+      endTime: endISO,       // ✅
     };
+
+    if (isNaN(new Date(startLocal).getTime()) || isNaN(new Date(endLocal).getTime())) {
+      alert("Invalid start/end date");
+    return;
+}
 
     if (!payload.title) { alert("Title is required"); return; }
     if (!payload.startTime || !payload.endTime) { alert("Start/End are required"); return; }

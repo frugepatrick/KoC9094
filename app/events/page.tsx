@@ -7,8 +7,8 @@ type EventRow = {
   description: string | null;
   location: string | null;
   isAllDay: boolean | null;
-  startTime: string;      // e.g. "2025-09-21 08:00:00"
-  endTime: string;        // same format
+  startTime: string;      
+  endTime: string;       
   createdBy: string;
 };
 
