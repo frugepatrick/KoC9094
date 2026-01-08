@@ -183,6 +183,24 @@ async function load() {
 
   const totalHours = rows.reduce((acc, r) => acc + Number(r.hours || 0), 0);
 
+  function getWorkDate(r: HourRow): Date | null {
+  // handle common variants your API might return
+  return (
+    parseDateLike((r as any).workDate) || // if API returns workDate (camelCase)
+    parseDateLike(r.workdate) ||          // if your type uses workdate
+    parseDateLike(r.date) ||              // fallback
+    null
+  );
+}
+
+  const sortedRows = useMemo(() => {
+  return [...rows].sort((a, b) => {
+    const ad = getWorkDate(a)?.getTime() ?? 0;
+    const bd = getWorkDate(b)?.getTime() ?? 0;
+    return bd - ad;
+  });
+}, [rows]);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;    
@@ -200,6 +218,9 @@ async function load() {
       // choose what to store in volunteer_hours.member_id
       // If you want to store the KofC member number:
       payload.memberId = selectedMember ? String(selectedMember.memberid) : "";
+    }
+    if (!canUseAdminMode) {
+      payload.subcategory = "Other";
     }
     if (!payload.workDate || !payload.hours || !payload.category) {
       alert("Please provide a date, hours, and category.");
@@ -229,7 +250,7 @@ async function load() {
     load();
   }
 
-  
+  const showList = mode !== "admin"; //hide the list of current hours on the admin "hours report" page
 
   return (
     <div className="card shadow-sm">
@@ -365,7 +386,40 @@ async function load() {
           </>
         )}
 
-        {/* keep your existing list rendering below */}
+        {/* List of vol hours for this year */}
+
+        {showList && !loading && !err && (
+          <div className="mt-2">
+            {sortedRows.length === 0 ? (
+              <div className="text-muted">No hours logged.</div>
+            ) : (
+              sortedRows.map((r) => {
+                const date =
+                  r.workdate ||
+                  r.date ||
+                  "";
+
+                return (
+                  <div key={r.id} className="border-top py-2">
+                    <div className="fw-semibold">
+                      {date
+                        ? new Date(date).toLocaleDateString()
+                        : "—"}{" "}
+                      · {Number(r.hours).toFixed(2)} hrs · {Number(r.hours).toFixed(2)} hrs
+                    </div>
+
+                    {r.description && (
+                      <div className="text-muted small">
+                        {r.description}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}   
+       
       </div>
     </div>
   );
