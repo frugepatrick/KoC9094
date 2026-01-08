@@ -49,7 +49,7 @@ type HoursCreatePayload = {
         {value: "RSVP", label: "RSVP"},
         {value: "Other", label: "Other"}
       ],
-      COMMUNITY: [
+      FAMILY: [
         {value: "Family of the Month", label: "Family of the Month"},
         {value: "Keep Christ in Christmas", label: "Keep Christ in Christmas"},
         {value: "Family Fully Alive", label: "Family Fully Alive"},
@@ -59,7 +59,7 @@ type HoursCreatePayload = {
         {value: "Food for Families", label: "Food for Families"},
         {value: "Other", label: "Other"}
       ],
-      LIFE: [
+      COMMUNITY: [
         {value: "Disaster Prepardeness", label: "Disaster Prepardeness"},
         {value: "Free Throw Championship", label: "Free Throw Championship"},
         {value: "Soccer Challenge", label: "Soccer Challenge"},
@@ -70,7 +70,7 @@ type HoursCreatePayload = {
         {value: "Habitat for Humanity", label: "Habitat for Humanity"},
         {value: "Other", label: "Other"},
       ],
-      FAMILY: [
+      LIFE: [
         {value: "Christian Refugee Relief", label: "Christian Refugee Relief"},
         {value: "Silver Rose", label: "Silver Rose"},
         {value: "Pregnancy Center Support/ ASAP", label: "Pregnancy Center Support/ ASAP"},
