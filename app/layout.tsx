@@ -18,7 +18,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await getServerSession(authOptions);
   const role = (session?.user as any)?.role;
   const adminOrOfficer = role === "admin" || role === "officer";
-
   return (
     <html lang="en">
       <head>

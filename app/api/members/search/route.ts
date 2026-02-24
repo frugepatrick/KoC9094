@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
             { email: { contains: q } },
           ],
         },
-    select: { id: true, memberid: true, firstname: true, lastname: true },
+    select: { id: true, memberid: true, firstname: true, lastname: true, },
     take: 10,
     orderBy: [{ lastname: "asc" }, { firstname: "asc" }],
   });

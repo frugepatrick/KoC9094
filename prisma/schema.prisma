@@ -62,14 +62,15 @@ model users {
 }
 
 model VolunteerHour {
-  id          Int                      @id @default(autoincrement())
-  memberId    String                   @map("member_id") @db.VarChar(50)
-  date        DateTime                 @db.Date
-  hours       Decimal                  @db.Decimal(5, 2)
-  description String?                  @db.Text
-  category    volunteer_hours_category
-  subcategory String?                  @db.VarChar(100)
-  createdAt   DateTime                 @default(now()) @map("created_at") @db.Timestamp(0)
+  id                 Int                      @id @default(autoincrement())
+  memberId           String                   @map("member_id") @db.VarChar(50)
+  date               DateTime                 @db.Date
+  hours              Decimal                  @db.Decimal(5, 2)
+  description        String?                  @db.Text
+  category           volunteer_hours_category
+  subcategory        String?                  @db.VarChar(100)
+  createdAt          DateTime                 @default(now()) @map("created_at") @db.Timestamp(0)
+  numberOfVolunteers Int?
 
   @@index([category, subcategory], map: "idx_volunteer_hours_category_subcategory")
   @@map("volunteer_hours")

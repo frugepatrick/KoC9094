@@ -29,32 +29,37 @@ export default function MeetingNotes() {
 
         <h3><u>Role Call:</u></h3>
         <ul>
-          <li>Grand Knight -</li><li>Chaplain -</li><li>Deputy Grand Knight -</li>
-          <li>Chancellor -</li><li>Recorder -</li><li>Financial Sec -</li>
-          <li>Treasurer -</li><li>Lecturer -</li><li>Advocate -</li>
-          <li>Warden -</li><li>Inside Guard -</li><li>Outside Guard -</li>
-          <li>Trustee (1st) -</li><li>Trustee (2nd) -</li><li>Trustee (3rd) -</li>
+          <li>Grand Knight - </li><li>Chaplain - </li><li>Deputy Grand Knight - </li>
+          <li>Chancellor - </li><li>Recorder - </li><li>Financial Sec - </li>
+          <li>Treasurer - </li><li>Lecturer - </li><li>Advocate - </li>
+          <li>Warden - </li><li>Inside Guard - </li><li>Outside Guard - </li>
+          <li>Trustee (1st) - </li><li>Trustee (2nd) - </li><li>Trustee (3rd) - </li>
         </ul>
 
         <h3><u>Approve Minutes of Prior Meeting:</u></h3><p></p>
         <h3><u>Chaplain's Message:</u></h3><p></p>
         <h3><u>Grand Knight's Report:</u></h3><p></p>
 
-        <h3><u>Financial Report:</u></h3>
+        <h3><u>Financial Secutary Report:</u></h3>
         <ul>
           <li>Started: $</li><li>Deposits: $</li><li>pig = $</li>
-          <li>Raffle Drawing = $</li><li>Owed Priest ed = $</li>
-          <li>Owed Raffle Drawings = $</li><li>Owe Supreme = $</li>
-          <li>Other Owed = $</li><li>Owed State: $</li>
+          <li>Raffle Drawing = </li>
+          <li>Owed Priest ed = $</li>
+          <li>Owed Raffle Drawings = $</li>
+          <li>Owe Supreme = $</li>
+          <li>Other Owed = $</li>
+          <li>Owed State: $</li>
           <li>Actual ending Balance = $</li>
         </ul>
 
-        <h3><u>Membership Report:</u></h3><p></p>
-        <ul><li>Total members:</li><li>New members:</li></ul>
+        <h3><u>Membership Report:</u></h3>
+        <ul><li>Total members:</li>
+        <li>New members:</li></ul>
 
         <h3><u>Faith:</u></h3><p></p>
         <h3><u>Family:</u></h3><p></p>
         <h3><u>Community:</u></h3><p></p>
+        <h3><u>Life:</u></h3><p></p>
         <h3><u>Fourth Degree Report:</u></h3><p></p>
         <h3><u>Field Agent Report:</u></h3><p></p>
         <h3><u>District Deputy Report:</u></h3><p></p>
@@ -64,8 +69,8 @@ export default function MeetingNotes() {
 
         <h3><u>Good of the Order:</u></h3>
         <ul>
-          <li>Family of the Quarter</li>
-          <li>Knight Of The Quarter</li>
+          <li>Family of the Month</li>
+          <li>Knight Of The Month</li>
           <li>Prayers for the Following:</li>
         </ul><p></p>
 

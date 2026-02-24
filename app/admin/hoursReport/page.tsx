@@ -3,10 +3,12 @@ import { useEffect, useState } from "react";
 import VolunteerHoursCard from "@/app/components/VolunteerHoursCard";
 
 type Row = {
+  id: string;
   memberId: string;                 // string, not number
   memberName: string;
   description: string | null;
   category: string;
+  hours: number;
   totalHours: number;
 };
 
@@ -52,7 +54,7 @@ export default function MonthlyHoursReport() {
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
 
-  const grandTotal = rows.reduce((a, r) => a + (r.totalHours || 0), 0);
+const grandTotal = rows.reduce((sum, r) => sum + Number((r as any).hours ?? (r as any).totalHours ?? 0), 0);
 
   return (
     <div className="card shadow-sm">
@@ -92,11 +94,11 @@ export default function MonthlyHoursReport() {
                       const full = r.description ?? "";
                       const preview = full ? truncateWords(full, 20) : "";
                       return (
-                        <tr key={`${r.memberId}-${r.category}`}>
+                        <tr key={`${r.id}`}>
                           <td>{r.memberName}</td>
-                          <td title={full}>{preview}</td> {/* hover shows full */}
+                          <td title={full}>{preview}</td>
                           <td>{LABELS[r.category] ?? r.category}</td>
-                          <td className="text-end">{r.totalHours.toFixed(2)}</td>
+                          <td className="text-end">{Number((r as any).hours ?? (r as any).totalHours ?? 0).toFixed(2)}</td>
                         </tr>
                       );
                     })}

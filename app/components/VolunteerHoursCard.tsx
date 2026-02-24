@@ -14,6 +14,7 @@ type HourRow = {
   category: "COMMUNITY" | "FAITH" | "LIFE" | "FAMILY" | "PATRIOTISM";
   subcategory?: string | null;
   createdAt: string;
+  numberofVolunteers: number | null;
 };
 
 type MemberHit = {
@@ -32,6 +33,7 @@ type HoursCreatePayload = {
   category: Category;
   subcategory?: string | null;
   memberId?: string;
+  numberOfVolunteers?: number | null;
 };
 
   const SUBCATEGORIES: Record<
@@ -99,6 +101,7 @@ export default function VolunteerHoursCard({mode = "user"} : {mode?: "user" | "a
   // controlled form state
   const [category, setCategory] = useState<Category | "">("");
   const [subcategory, setSubcategory] = useState<string>("");
+  const [numberOfVolunteers, setNumberOfVolunteers] = useState<number | null>(null); // can be either number or null and defaults to null
   // Reset subcat when you change cat
   useEffect(() => {
     setSubcategory("");
@@ -145,6 +148,7 @@ async function load() {
       if (!res.ok) throw new Error(`Failed to load hours (${res.status})`);
       const data = await res.json();
       setRows(Array.isArray(data) ? data : []);
+      console.log(rows);
     } catch (e: any) {
       setErr(e?.message || "Failed to load hours");
     } finally {
@@ -218,6 +222,7 @@ async function load() {
       // choose what to store in volunteer_hours.member_id
       // If you want to store the KofC member number:
       payload.memberId = selectedMember ? String(selectedMember.memberid) : "";
+      payload.numberOfVolunteers = numberOfVolunteers ?? null; //set to numberOfVolunteers or set null
     }
     if (!canUseAdminMode) {
       payload.subcategory = "Other";
@@ -230,6 +235,7 @@ async function load() {
       alert("Admin: please select member + subcategory.");
       return;
     }
+    console.log("The Payload is: ", payload);
     const res = await fetch("/api/hours", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -247,6 +253,7 @@ async function load() {
     setMemberQuery("");
     setMemberHits([]);
     setSelectedMember(null);
+    setNumberOfVolunteers(null);
     load();
   }
 
@@ -374,8 +381,25 @@ async function load() {
                           Selected: <strong>{selectedMember.firstname} {selectedMember.lastname}</strong> — Member #{selectedMember.memberid}
                         </div>
                       )}
+
                     </div>
                   )}
+                  {canUseAdminMode && (
+                      <div className="col-12 col-sm-4 col-md-3">
+                        <label className="form-label">Number Of Other Volunteers:</label>
+                        <input name="numberOfVolunteers" 
+                        className="form-control" 
+                        placeholder="How many other volunteers?" 
+                        value={numberOfVolunteers ?? ""} //value is the number or empty string which is null in TS or React
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setNumberOfVolunteers(val === "" ? null : Number(val)); // if val is string (empty) set to null else set val to number
+                          console.log("Value of vols:" , val);
+                        }}
+                        />
+                      </div>
+                  )}
+
                 </div>
 
                 <div className="mt-2">

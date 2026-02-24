@@ -36,7 +36,8 @@ export async function GET(req: NextRequest) {
     const items = await prisma.volunteerHour.findMany({
       where: { memberId, ...rangeFilter(from, to) },
       orderBy: [{ date: "desc" }, { id: "desc" }],
-      select: { id: true, date: true, hours: true, description: true, memberId: true, category: true, subcategory: true, createdAt: true },
+      select: { id: true, date: true, hours: true, description: true, memberId: true, category: true, subcategory: true, createdAt: true, numberOfVolunteers: true,
+         },
     });
 
     return NextResponse.json(items, { headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" } });
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
     if (!sessionMemberId) return new NextResponse("Missing memberId on session", { status: 400 });
 
     // Expect: { workDate: string(YYYY-MM-DD or ISO), hours: number, description?: string, category: "COMMUNITY"|"FAITH"|..., subcategory?: string }
-    const { workDate, hours, description, category, subcategory, memberId: bodyMemberId } = await req.json();
+    const { workDate, hours, description, category, subcategory, memberId: bodyMemberId, numberOfVolunteers, } = await req.json();
 
     if (!workDate || typeof hours !== "number" || hours <= 0) {
       return new NextResponse("Bad Request: invalid workDate/hours", { status: 400 });
@@ -85,10 +86,12 @@ export async function POST(req: NextRequest) {
         description: description ?? null,
         category: cat,
         subcategory: finalSubcategory,
+        numberOfVolunteers,
       },
-      select: { id: true, date: true, hours: true, description: true, memberId: true, category: true, subcategory: true, createdAt: true },
+      select: { id: true, date: true, hours: true, description: true, memberId: true, category: true, subcategory: true, createdAt: true, numberOfVolunteers: true, },
     });
 
+      console.log("Seding to the database: " , created);
     return NextResponse.json(created, { status: 201, headers: { "Cache-Control": "no-store" } });
   } catch (err) {
     console.error(err);

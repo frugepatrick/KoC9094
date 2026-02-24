@@ -4,11 +4,13 @@ import type { Prisma } from "@prisma/client";
 
 function monthBoundsUTC(ym?: string) {
   const now = new Date();
-  const [Y, M] = (ym || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`)
-    .split("-").map(Number);
+  const [Y, M] = (ym || `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`)
+    .split("-")
+    .map(Number);
   if (!Y || !M) throw new Error("Bad month param; expected YYYY-MM");
+
   const start = new Date(Date.UTC(Y, M - 1, 1, 0, 0, 0));
-  const end   = new Date(Date.UTC(Y, M,     1, 0, 0, 0)); // exclusive
+  const end = new Date(Date.UTC(Y, M, 1, 0, 0, 0)); // exclusive
   return { start, end, ym: `${Y}-${String(M).padStart(2, "0")}` };
 }
 
@@ -21,57 +23,45 @@ export async function GET(req: NextRequest) {
 
     const where: Prisma.VolunteerHourWhereInput = { date: { gte: start, lt: end } };
 
-    // 1) group by member + category
-    const grouped = await prisma.volunteerHour.groupBy({
-      by: ["memberId", "category"],
+    // Pull all submissions (no grouping)
+    const submissions = await prisma.volunteerHour.findMany({
       where,
-      _sum: { hours: true },
-      orderBy: [{ memberId: "asc" }, { category: "asc" }],
+      orderBy: [{ date: "asc" }, { id: "asc" }],
+      select: {
+        id: true,
+        date: true,
+        memberId: true,
+        category: true,
+        subcategory: true,
+        description: true,
+        numberOfVolunteers: true,
+        hours: true,
+      },
     });
 
-    // 2) fetch member display info
-    const memberIdsRaw = Array.from(new Set(grouped.map(g => g.memberId)));
+    // Fetch member names for those submissions
+    const memberIdsNum = Array.from(new Set(submissions.map(s => Number(s.memberId))))
+      .filter(n => Number.isInteger(n));
 
-    // Coerce to numbers for Prisma (since members.memberid is Int)
-    const memberIdsNum = memberIdsRaw
-    .map(v => (typeof v === "number" ? v : Number(String(v))))
-    .filter(n => Number.isInteger(n)); // keep only valid ints
-    
     const members = memberIdsNum.length
       ? await prisma.members.findMany({
           where: { memberid: { in: memberIdsNum } },
           select: { memberid: true, firstname: true, lastname: true },
         })
       : [];
+
     const mIndex = new Map(members.map(m => [String(m.memberid), m]));
 
-    // 3) for each group, get the latest description within the month
-    const rows = await Promise.all(grouped.map(async (g) => {
-      const latest = await prisma.volunteerHour.findFirst({
-        where: {
-          memberId: g.memberId,
-          category: g.category,
-          date: { gte: start, lt: end },
-        },
-        orderBy: [{ date: "desc" }, { id: "desc" }],
-        select: { description: true },
-      });
-
-      const m = mIndex.get(String(g.memberId));
-      const total = Number(g._sum?.hours ?? 0);
+    const rows = submissions.map(s => {
+      const m = mIndex.get(String(s.memberId));
       const name = m ? `${m.firstname ?? ""} ${m.lastname ?? ""}`.trim() : "";
-
       return {
-        memberId: String(g.memberId),
-        memberName: name || `${g.memberId}`,
-        description: latest?.description ?? null, // <-- from hours, not members
-        category: g.category,
-        totalHours: Number.isFinite(total) ? total : 0,
+        ...s,
+        memberName: name || `Member#: ${s.memberId}`,
       };
-    }));
+    });
 
     const payload: any = { month: resolved, rows };
-    console.log(payload);
     if (debug) payload.debug = { utcRange: { start: start.toISOString(), end: end.toISOString() } };
 
     return NextResponse.json(payload, { headers: { "Cache-Control": "no-store" } });

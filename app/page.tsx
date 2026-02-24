@@ -34,7 +34,7 @@ export default async function HomePage() {
               </div>
             </div>
             <div className="row g-4">
-</div>
+            </div>
           </div>
 
           {/* Upcoming Events (with Create button gated by role) */}
