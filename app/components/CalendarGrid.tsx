@@ -12,6 +12,7 @@ import { useMemo, useState, useRef, useEffect } from 'react';
 import { useEvents, type EventRow } from '@/lib/events';
 import { formatDateRange } from '@/lib/date';
 import Modal from 'bootstrap/js/dist/modal'; // Bootstrap Modal (client-only)
+import { useSession } from 'next-auth/react';
 
 // ===== Config =====
 const TZ = 'America/Chicago';
@@ -86,9 +87,138 @@ function monthGrid(viewDate: Date) {
   return { weeks, from, to, firstOfMonth };
 }
 
+// ===== Edit Event Form Component =====
+function EditEventForm({ event, onSave, onCancel }: { 
+  event: EventRow; 
+  onSave: (updates: Partial<EventRow>) => void; 
+  onCancel: () => void; 
+}) {
+  const [formData, setFormData] = useState({
+    title: event.title,
+    description: event.description || '',
+    location: event.location || '',
+    startTime: event.startTime,
+    endTime: event.endTime,
+    isAllDay: event.isAllDay || false,
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Convert datetime-local values (local time) to UTC ISO strings for storage
+    const updates = {
+      ...formData,
+      startTime: new Date(formData.startTime).toISOString(),
+      endTime: new Date(formData.endTime).toISOString(),
+    };
+    onSave(updates);
+  };
+
+  const handleChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Format datetime for input field (local time, not UTC)
+  const formatDateTime = (dateTime: string) => {
+    const date = new Date(dateTime);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="mb-3">
+        <label htmlFor="edit-title" className="form-label">Title *</label>
+        <input
+          type="text"
+          className="form-control"
+          id="edit-title"
+          value={formData.title}
+          onChange={(e) => handleChange('title', e.target.value)}
+          required
+        />
+      </div>
+
+      <div className="mb-3">
+        <label htmlFor="edit-description" className="form-label">Description</label>
+        <textarea
+          className="form-control"
+          id="edit-description"
+          rows={3}
+          value={formData.description}
+          onChange={(e) => handleChange('description', e.target.value)}
+        />
+      </div>
+
+      <div className="mb-3">
+        <label htmlFor="edit-location" className="form-label">Location</label>
+        <input
+          type="text"
+          className="form-control"
+          id="edit-location"
+          value={formData.location}
+          onChange={(e) => handleChange('location', e.target.value)}
+        />
+      </div>
+
+      <div className="mb-3">
+        <div className="form-check">
+          <input
+            className="form-check-input"
+            type="checkbox"
+            id="edit-isAllDay"
+            checked={formData.isAllDay}
+            onChange={(e) => handleChange('isAllDay', e.target.checked)}
+          />
+          <label className="form-check-label" htmlFor="edit-isAllDay">
+            All day event
+          </label>
+        </div>
+      </div>
+
+      <div className="row">
+        <div className="col-md-6 mb-3">
+          <label htmlFor="edit-startTime" className="form-label">Start Time *</label>
+          <input
+            type="datetime-local"
+            className="form-control"
+            id="edit-startTime"
+            value={formatDateTime(formData.startTime)}
+            onChange={(e) => handleChange('startTime', e.target.value)}
+            required
+          />
+        </div>
+        <div className="col-md-6 mb-3">
+          <label htmlFor="edit-endTime" className="form-label">End Time *</label>
+          <input
+            type="datetime-local"
+            className="form-control"
+            id="edit-endTime"
+            value={formatDateTime(formData.endTime)}
+            onChange={(e) => handleChange('endTime', e.target.value)}
+            required
+          />
+        </div>
+      </div>
+
+      <div className="d-flex justify-content-end gap-2">
+        <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
+        <button type="submit" className="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  );
+}
+
 export default function CalendarGrid() {
   // Cursor controls which month is shown
   const [cursor, setCursor] = useState<Date>(new Date());
+
+  // Session for role checking
+  const { data: session } = useSession();
+  const canEdit = session?.user?.role === 'admin' || session?.user?.role === 'officer';
 
   // Build month grid + event fetch window when cursor changes
   const { weeks, from, to, firstOfMonth } = useMemo(() => monthGrid(cursor), [cursor]);
@@ -101,17 +231,73 @@ export default function CalendarGrid() {
   const modalRef = useRef<HTMLDivElement | null>(null);
   const modalInstance = useRef<Modal | null>(null);
 
+  // ===== Edit modal state =====
+  const [editing, setEditing] = useState<EventRow | null>(null);
+  const editModalRef = useRef<HTMLDivElement | null>(null);
+  const editModalInstance = useRef<Modal | null>(null);
+
+  // ===== Success banner state =====
+  const [showSuccess, setShowSuccess] = useState(false);
+
   useEffect(() => {
     if (modalRef.current) {
       modalInstance.current = Modal.getOrCreateInstance(modalRef.current, { backdrop: true, focus: true });
     }
-    return () => { modalInstance.current?.hide(); modalInstance.current = null; };
+    if (editModalRef.current) {
+      editModalInstance.current = Modal.getOrCreateInstance(editModalRef.current, { backdrop: true, focus: true });
+      // Reset editing state when edit modal is hidden
+      editModalRef.current.addEventListener('hidden.bs.modal', () => {
+        setEditing(null);
+      });
+    }
+    return () => { 
+      modalInstance.current?.hide(); 
+      modalInstance.current = null; 
+      editModalInstance.current?.hide();
+      editModalInstance.current = null;
+    };
   }, []);
 
   /** Open details modal for an event */
   const openEvent = (ev: EventRow) => {
     setSelected(ev);
     modalInstance.current?.show();
+  };
+
+  /** Open edit modal for an event */
+  const openEdit = (ev: EventRow) => {
+    setEditing(ev);
+    modalInstance.current?.hide(); // Hide the view modal
+    editModalInstance.current?.show();
+  };
+
+  /** Handle updating an event */
+  const handleUpdateEvent = async (updatedEvent: Partial<EventRow>) => {
+    if (!editing) return;
+
+    try {
+      const response = await fetch(`/api/events/${editing.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedEvent),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update event');
+      }
+
+      // Refresh events
+      reload();
+      editModalInstance.current?.hide();
+      setEditing(null);
+      
+      // Show success banner
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000); // Hide after 3 seconds
+    } catch (error) {
+      console.error('Error updating event:', error);
+      alert('Failed to update event. Please try again.');
+    }
   };
 
   // ===== Split events into all-day vs timed =====
@@ -200,6 +386,15 @@ export default function CalendarGrid() {
           <button className="btn btn-outline-secondary" onClick={() => setCursor(addMonths(cursor, 1))}>→</button>
         </div>
       </div>
+
+      {/* ===== Success Banner ===== */}
+      {showSuccess && (
+        <div className="alert alert-success alert-dismissible fade show mb-3" role="alert">
+          <i className="bi bi-check-circle-fill me-2"></i>
+          Event updated successfully!
+          <button type="button" className="btn-close" onClick={() => setShowSuccess(false)} aria-label="Close"></button>
+        </div>
+      )}
 
       {/* ===== Week header row (Sun..Sat) ===== */}
       <div className="calendar-grid mb-1 text-muted fw-semibold small">
@@ -349,6 +544,24 @@ export default function CalendarGrid() {
             </div>
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" onClick={() => modalInstance.current?.hide()}>Close</button>
+              {canEdit && (
+                <button type="button" className="btn btn-primary" onClick={() => selected && openEdit(selected)}>Edit</button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== Event Edit Modal ===== */}
+      <div className="modal fade" ref={editModalRef} tabIndex={-1} aria-labelledby="editEventModalLabel" aria-hidden="true">
+        <div className="modal-dialog modal-dialog-centered modal-lg">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="editEventModalLabel">Edit Event</h5>
+              <button type="button" className="btn-close" onClick={() => editModalInstance.current?.hide()} aria-label="Close"></button>
+            </div>
+            <div className="modal-body">
+              {editing && <EditEventForm event={editing} onSave={handleUpdateEvent} onCancel={() => editModalInstance.current?.hide()} />}
             </div>
           </div>
         </div>

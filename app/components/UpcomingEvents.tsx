@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
+import Modal from 'bootstrap/js/dist/modal';
 
 // Match your API shape
 type EventRow = {
@@ -64,10 +65,60 @@ export default function UpcomingEvents({ title = "Upcoming Events", limit = 6 }:
   }
 
   useEffect(() => { load();}, []);
+  
+  // Initialize edit modal
+  useEffect(() => {
+    if (editModalRef.current) {
+      editModalInstance.current = Modal.getOrCreateInstance(editModalRef.current, { backdrop: true, focus: true });
+      editModalRef.current.addEventListener('hidden.bs.modal', () => {
+        setEditing(null);
+      });
+    }
+    return () => { 
+      editModalInstance.current?.hide();
+      editModalInstance.current = null;
+    };
+  }, []);
+
+  // ===== Edit functions =====
+  const openEdit = (ev: EventRow) => {
+    setEditing(ev);
+    editModalInstance.current?.show();
+  };
+
+  const handleUpdateEvent = async (updatedEvent: Partial<EventRow>) => {
+    if (!editing) return;
+
+    try {
+      const response = await fetch(`/api/events/${editing.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedEvent),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update event');
+      }
+
+      // Refresh events
+      await load();
+      editModalInstance.current?.hide();
+      setEditing(null);
+      alert('Event updated successfully!');
+    } catch (error) {
+      console.error('Error updating event:', error);
+      alert('Failed to update event. Please try again.');
+    }
+  };
   //Setting this to prevent button double clicks later
   const [isSaving , setIsSaving] = useState(false);
   // Bootstrap modal (open/close via data attributes; optional programmatic close if bundle is present)
   const createModalRef = useRef<HTMLDivElement | null>(null);
+
+  // ===== Edit modal state =====
+  const [editing, setEditing] = useState<EventRow | null>(null);
+  const editModalRef = useRef<HTMLDivElement | null>(null);
+  const editModalInstance = useRef<Modal | null>(null);
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -166,14 +217,26 @@ export default function UpcomingEvents({ title = "Upcoming Events", limit = 6 }:
 
         <div className="list-group list-group-flush">
           {visible.map(ev => (
-            <div key={ev.id} className="list-group-item">
-              <div className="fw-semibold">{ev.title}</div>
-              <div className="small text-muted">
-                {fallbackFormatRange(ev.startTime, ev.endTime)}
-                {ev.location ? ` · @ ${ev.location}` : null}
-                {ev.isAllDay ? " · All day" : null}
+            <div 
+              key={ev.id} 
+              className={`list-group-item ${canEdit ? 'cursor-pointer hover-bg-light' : ''}`}
+              onClick={canEdit ? () => openEdit(ev) : undefined}
+              style={canEdit ? { cursor: 'pointer' } : undefined}
+            >
+              <div className="d-flex justify-content-between align-items-start">
+                <div className="flex-grow-1">
+                  <div className="fw-semibold">{ev.title}</div>
+                  <div className="small text-muted">
+                    {fallbackFormatRange(ev.startTime, ev.endTime)}
+                    {ev.location ? ` · @ ${ev.location}` : null}
+                    {ev.isAllDay ? " · All day" : null}
+                  </div>
+                  {ev.description && <div className="small mt-1">{ev.description}</div>}
+                </div>
+                {canEdit && (
+                  <i className="bi bi-pencil-square text-muted ms-2" style={{ fontSize: '0.8rem' }}></i>
+                )}
               </div>
-              {ev.description && <div className="small mt-1">{ev.description}</div>}
             </div>
           ))}
         </div>
@@ -231,6 +294,152 @@ export default function UpcomingEvents({ title = "Upcoming Events", limit = 6 }:
           </div>
         </div>
       </div>
+
+      {/* ===== Event Edit Modal ===== */}
+      <div className="modal fade" ref={editModalRef} tabIndex={-1} aria-labelledby="editEventModalLabel" aria-hidden="true">
+        <div className="modal-dialog modal-dialog-centered modal-lg">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="editEventModalLabel">Edit Event</h5>
+              <button type="button" className="btn-close" onClick={() => editModalInstance.current?.hide()} aria-label="Close"></button>
+            </div>
+            <div className="modal-body">
+              {editing && <EditEventForm event={editing} onSave={handleUpdateEvent} onCancel={() => editModalInstance.current?.hide()} />}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        .hover-bg-light:hover {
+          background-color: #f8f9fa !important;
+        }
+      `}</style>
     </div>
+  );
+}
+
+// ===== Edit Event Form Component =====
+function EditEventForm({ event, onSave, onCancel }: { 
+  event: EventRow; 
+  onSave: (updates: Partial<EventRow>) => void; 
+  onCancel: () => void; 
+}) {
+  const [formData, setFormData] = useState({
+    title: event.title,
+    description: event.description || '',
+    location: event.location || '',
+    startTime: event.startTime,
+    endTime: event.endTime,
+    isAllDay: event.isAllDay || false,
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Convert datetime-local values (local time) to UTC ISO strings for storage
+    const updates = {
+      ...formData,
+      startTime: new Date(formData.startTime).toISOString(),
+      endTime: new Date(formData.endTime).toISOString(),
+    };
+    onSave(updates);
+  };
+
+  const handleChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Format datetime for input field (local time, not UTC)
+  const formatDateTime = (dateTime: string) => {
+    const date = new Date(dateTime);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="mb-3">
+        <label htmlFor="edit-title" className="form-label">Title *</label>
+        <input
+          type="text"
+          className="form-control"
+          id="edit-title"
+          value={formData.title}
+          onChange={(e) => handleChange('title', e.target.value)}
+          required
+        />
+      </div>
+
+      <div className="mb-3">
+        <label htmlFor="edit-description" className="form-label">Description</label>
+        <textarea
+          className="form-control"
+          id="edit-description"
+          rows={3}
+          value={formData.description}
+          onChange={(e) => handleChange('description', e.target.value)}
+        />
+      </div>
+
+      <div className="mb-3">
+        <label htmlFor="edit-location" className="form-label">Location</label>
+        <input
+          type="text"
+          className="form-control"
+          id="edit-location"
+          value={formData.location}
+          onChange={(e) => handleChange('location', e.target.value)}
+        />
+      </div>
+
+      <div className="mb-3">
+        <div className="form-check">
+          <input
+            className="form-check-input"
+            type="checkbox"
+            id="edit-isAllDay"
+            checked={formData.isAllDay}
+            onChange={(e) => handleChange('isAllDay', e.target.checked)}
+          />
+          <label className="form-check-label" htmlFor="edit-isAllDay">
+            All day event
+          </label>
+        </div>
+      </div>
+
+      <div className="row">
+        <div className="col-md-6 mb-3">
+          <label htmlFor="edit-startTime" className="form-label">Start Time *</label>
+          <input
+            type="datetime-local"
+            className="form-control"
+            id="edit-startTime"
+            value={formatDateTime(formData.startTime)}
+            onChange={(e) => handleChange('startTime', e.target.value)}
+            required
+          />
+        </div>
+        <div className="col-md-6 mb-3">
+          <label htmlFor="edit-endTime" className="form-label">End Time *</label>
+          <input
+            type="datetime-local"
+            className="form-control"
+            id="edit-endTime"
+            value={formatDateTime(formData.endTime)}
+            onChange={(e) => handleChange('endTime', e.target.value)}
+            required
+          />
+        </div>
+      </div>
+
+      <div className="d-flex justify-content-end gap-2">
+        <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
+        <button type="submit" className="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
   );
 }

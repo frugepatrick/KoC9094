@@ -34,6 +34,7 @@ export default function MonthlyHoursReport() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [showCount, setShowCount] = useState(10); // Number of rows to display
 
   async function load(m = month) {
     setLoading(true);
@@ -43,6 +44,7 @@ export default function MonthlyHoursReport() {
       if (!res.ok) throw new Error(`API ${res.status}`);
       const data = await res.json();
       setRows(Array.isArray(data?.rows) ? data.rows : []);
+      setShowCount(10); // Reset to show first 10 when loading new data
     } catch (e: any) {
       console.error("monthly-hours load error:", e);
       setErr(e?.message || "Failed to load report");
@@ -62,7 +64,10 @@ const grandTotal = rows.reduce((sum, r) => sum + Number((r as any).hours ?? (r a
         <div className="d-flex gap-2 align-items-end mb-3">
           <div>
             <label className="form-label">Month</label>
-            <input type="month" className="form-control" value={month} onChange={(e) => setMonth(e.target.value)} />
+            <input type="month" className="form-control" value={month} onChange={(e) => {
+              setMonth(e.target.value);
+              setShowCount(10); // Reset pagination when month changes
+            }} />
           </div>
           <button className="btn btn-secondary mb-1" onClick={() => load()}>Refresh</button>
           <a className="btn btn-outline-primary mb-1" href={`/api/reports/monthly-report.csv?month=${encodeURIComponent(month)}`}>
@@ -75,36 +80,53 @@ const grandTotal = rows.reduce((sum, r) => sum + Number((r as any).hours ?? (r a
 
         {!loading && !err && (
           <>
-            <div className="mb-2 fw-semibold">Grand Total: {grandTotal.toFixed(2)} hrs</div>
+            <div className="mb-2 fw-semibold">
+              Grand Total: {grandTotal.toFixed(2)} hrs
+              {rows.length > showCount && (
+                <span className="text-muted ms-2">(showing {showCount} of {rows.length} entries)</span>
+              )}
+            </div>
             {rows.length === 0 ? (
               <div className="text-muted">No hours found for {month}.</div>
             ) : (
-              <div className="table-responsive">
-                <table className="table table-sm align-middle">
-                  <thead>
-                    <tr>
-                      <th style={{minWidth: 180}}>Member</th>
-                      <th style={{minWidth: 320}}>Description</th>
-                      <th>Category</th>
-                      <th className="text-end">Total Hours</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((r) => {
-                      const full = r.description ?? "";
-                      const preview = full ? truncateWords(full, 20) : "";
-                      return (
-                        <tr key={`${r.id}`}>
-                          <td>{r.memberName}</td>
-                          <td title={full}>{preview}</td>
-                          <td>{LABELS[r.category] ?? r.category}</td>
-                          <td className="text-end">{Number((r as any).hours ?? (r as any).totalHours ?? 0).toFixed(2)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <>
+                <div className="table-responsive">
+                  <table className="table table-sm align-middle">
+                    <thead>
+                      <tr>
+                        <th style={{minWidth: 180}}>Member</th>
+                        <th style={{minWidth: 320}}>Description</th>
+                        <th>Category</th>
+                        <th className="text-end">Total Hours</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.slice(0, showCount).map((r) => {
+                        const full = r.description ?? "";
+                        const preview = full ? truncateWords(full, 20) : "";
+                        return (
+                          <tr key={`${r.id}`}>
+                            <td>{r.memberName}</td>
+                            <td title={full}>{preview}</td>
+                            <td>{LABELS[r.category] ?? r.category}</td>
+                            <td className="text-end">{Number((r as any).hours ?? (r as any).totalHours ?? 0).toFixed(2)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {showCount < rows.length && (
+                  <div className="text-center mt-3">
+                    <button 
+                      className="btn btn-outline-primary" 
+                      onClick={() => setShowCount(prev => prev + 10)}
+                    >
+                      Show More ({rows.length - showCount} remaining)
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
