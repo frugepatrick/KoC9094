@@ -9,7 +9,7 @@ type SideType = "POTATO_SALAD" | "COLESLAW";
 type OrderItemInput = {
   itemType: ItemType;
   sideType: SideType;
-  quantity: number;
+  quantity: number | "";
   notes: string;
 };
 
@@ -28,7 +28,7 @@ function createBlankItem(): OrderItemInput {
   return {
     itemType: "FISH",
     sideType: "POTATO_SALAD",
-    quantity: 1,
+    quantity: "",
     notes: "",
   };
 }
@@ -204,7 +204,9 @@ export default function FishFryOrderEntryPage() {
                             updateItem(
                               index,
                               "quantity",
-                              Math.max(1, Number(e.target.value) || 1),
+                              e.target.value === ""
+                                ? ""
+                                : Math.max(1, Number(e.target.value)),
                             )
                           }
                           className="form-control form-control-lg"
