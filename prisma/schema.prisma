@@ -90,3 +90,61 @@ enum volunteer_hours_category {
   FAMILY
   PATRIOTISM
 }
+
+
+model PosOrder {
+  id           String         @id @default(uuid())
+  serviceDate  DateTime       @map("service_date") @db.Date
+  orderNumber  Int            @map("order_number")
+  customerName String?        @map("customer_name")
+  status       PosOrderStatus @default(OPEN)
+  notes        String?
+  submittedBy  String?        @map("submitted_by")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  completedAt  DateTime?      @map("completed_at")
+
+  items        PosOrderItem[]
+
+  @@unique([serviceDate, orderNumber])
+  @@map("orders")
+}
+
+model PosOrderItem {
+  id        String      @id @default(uuid())
+  orderId   String      @map("order_id")
+  itemType  PosItemType @map("item_type")
+  sideType  PosSideType @map("side_type")
+  quantity  Int
+  createdAt DateTime    @default(now()) @map("created_at")
+  notes String @map("notes")
+
+  order     PosOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_items")
+}
+
+model PosDailyCounter {
+  serviceDate     DateTime @id @map("service_date") @db.Date
+  lastOrderNumber Int      @default(0) @map("last_order_number")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("pos_daily_counters")
+}
+
+enum PosOrderStatus {
+  OPEN
+  COMPLETED
+  CANCELLED
+}
+
+enum PosItemType {
+  FISH
+  SHRIMP
+  COMBO
+}
+
+enum PosSideType {
+  POTATO_SALAD
+  COLESLAW
+}

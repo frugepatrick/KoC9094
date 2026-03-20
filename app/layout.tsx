@@ -7,22 +7,42 @@ import Providers from "@/providers";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
 import ToasterClient from "./ToasterClient";
-import 'bootstrap/dist/css/bootstrap.min.css'
+import "bootstrap/dist/css/bootstrap.min.css";
 
 export const metadata = {
   title: "Knights of Columbus -- 9094",
   description: "Knights of Columbus Council 9094 member application",
 };
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const session = await getServerSession(authOptions);
   const role = (session?.user as any)?.role;
   const adminOrOfficer = role === "admin" || role === "officer";
   return (
     <html lang="en">
       <head>
-          {/* Creating apple icons for saving webpage as a icon on phone homescreen */}
-          <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        {/* Creating icons for saving webpage as a icon on phone homescreen */}
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/apple-touch-icon.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="32x32"
+          href="/favicon-32x32.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="16x16"
+          href="/favicon-16x16.png"
+        />
       </head>
       <body className="d-flex flex-column min-vh-100">
         <Providers>
@@ -30,7 +50,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <nav className="navbar navbar-expand-lg navbar-dark border-bottom shadow-sm sticky-top">
             <div className="container-fluid">
               {/* Brand: logo + title */}
-              <Link href="/" className="navbar-brand d-flex align-items-center text-decoration-none">
+              <Link
+                href="/"
+                className="navbar-brand d-flex align-items-center text-decoration-none"
+              >
                 <Image
                   src="/KoC_Logo_No_Words.png"
                   alt="Knights of Columbus"
@@ -42,7 +65,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   style={{ height: "auto", width: "auto", maxHeight: 64 }}
                 />
                 <span className="ms-3 mb-0 text-warning fw-semibold lh-sm d-none d-sm-inline">
-                  Knights of Columbus<br className="d-none d-md-inline" />
+                  Knights of Columbus
+                  <br className="d-none d-md-inline" />
                   <span className="d-inline d-md-none">Council 9094</span>
                   <span className="d-none d-md-inline"> Council 9094</span>
                 </span>
@@ -62,26 +86,53 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </button>
 
               {/* Collapsible links */}
-              <div className="collapse navbar-collapse" id="navbarNav" >
-                <ul className="navbar-nav ms-auto" >
-                  <li className="nav-item" >
-                    <Link href="/" className="nav-link fw-bold">Home</Link>
+              <div className="collapse navbar-collapse" id="navbarNav">
+                <ul className="navbar-nav ms-auto">
+                  <li className="nav-item">
+                    <Link href="/" className="nav-link fw-bold">
+                      Home
+                    </Link>
                   </li>
                   <li className="nav-item">
-                    <Link href="/members" className="nav-link fw-bold">Members</Link>
+                    <Link href="/members" className="nav-link fw-bold">
+                      Members
+                    </Link>
                   </li>
                   <li className="nav-item">
-                    <Link href="/calendar" className="nav-link fw-bold">Calendar</Link>
+                    <Link href="/calendar" className="nav-link fw-bold">
+                      Calendar
+                    </Link>
                   </li>
                   <li className="nav-item">
-                    <Link href="/about" className="nav-link fw-bold">About</Link>
+                    <Link href="/about" className="nav-link fw-bold">
+                      About
+                    </Link>
                   </li>
                   <li className="nav-item">
-                    <Link href="/meetingNotes" className="nav-link fw-bold text-nowrap">Meeting Notes</Link>
+                    <Link
+                      href="/meetingNotes"
+                      className="nav-link fw-bold text-nowrap"
+                    >
+                      Meeting Notes
+                    </Link>
                   </li>
+                  <li className="nav-item">
+                    <Link
+                      href="/admin/fishfry/pos"
+                      className="nav-link fw-bold text-nowrap"
+                    >
+                      Fish Fry POS
+                    </Link>
+                  </li>
+
                   {adminOrOfficer && (
                     <li className="nav-item">
-                      <Link href="/admin/hoursReport" className="nav-link fw-bold text-nowrap">Hours Report</Link>
+                      <Link
+                        href="/admin/hoursReport"
+                        className="nav-link fw-bold text-nowrap"
+                      >
+                        Hours Report
+                      </Link>
                     </li>
                   )}
                 </ul>
@@ -90,18 +141,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </nav>
 
           {/* Main */}
-          <main className="flex-grow-1" style={{ backgroundColor: "var(--KoCGrey)" }}>
+          <main
+            className="flex-grow-1"
+            style={{ backgroundColor: "var(--KoCGrey)" }}
+          >
             <div className="container my-4">{children}</div>
           </main>
 
-
           {/* Footer */}
-          <footer className="text-white text-center py-3 mt-auto" style={{ backgroundColor: "var(--KoCBlue)" }}>
+          <footer
+            className="text-white text-center py-3 mt-auto"
+            style={{ backgroundColor: "var(--KoCBlue)" }}
+          >
             <p className="mb-0">© 2025 Knights of Columbus Council 9094</p>
           </footer>
 
           {/* Global Toaster */}
-          <ToasterClient/>
+          <ToasterClient />
         </Providers>
 
         {/* Bootstrap JS (bundle includes Popper) */}
