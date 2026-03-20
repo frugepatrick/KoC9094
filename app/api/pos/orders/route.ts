@@ -12,7 +12,7 @@ type PosOrderItemInput = {
   itemType: "FISH" | "SHRIMP" | "COMBO";
   sideType: "POTATO_SALAD" | "COLESLAW";
   quantity: number;
-  notes?: string | null;
+  notes?: string | "";
 };
 
 function getStartOfToday() {
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
                 itemType: item.itemType,
                 sideType: item.sideType,
                 quantity: Number(item.quantity),
-                notes: item.notes?.trim() || null,
+                notes: item.notes?.trim() || "",
               })),
             },
           },

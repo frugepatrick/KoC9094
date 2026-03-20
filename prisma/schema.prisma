@@ -117,7 +117,7 @@ model PosOrderItem {
   sideType  PosSideType @map("side_type")
   quantity  Int
   createdAt DateTime    @default(now()) @map("created_at")
-  notes String @map("notes")
+  notes String? @map("notes")
 
   order     PosOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
